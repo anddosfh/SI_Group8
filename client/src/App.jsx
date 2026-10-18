@@ -8,7 +8,7 @@ import CheckoutModal from "./pages/CheckoutModal";
 import OrdersModal from "./pages/OrdersModal";
 import AdminModal from "./pages/AdminModal";
 import { StoreProvider, useStore } from "./context/StoreContext";
-import { api, clearSession, getSavedUser, setSession } from "./services/api";
+import { api, clearSession, getSavedUser, getToken, setSession } from "./services/api";
 
 function StoreApp() {
   const store = useStore();
@@ -29,8 +29,10 @@ function StoreApp() {
     if(!user){setModal("account");throw new Error("Please sign in before placing an order.");}
     if(!store.cart.length)throw new Error("Your bag is empty.");
     const result=await api("/orders",{method:"POST",body:JSON.stringify({items:store.cart.map(i=>({productId:i.id,quantity:i.quantity})),address})});
-    if(address && address!==user.address){const updated=await api("/me",{method:"PUT",body:JSON.stringify({address})});setUser(updated.user);setSession(localStorage.getItem("nova_token"),updated.user);}
     store.clearCart();setModal("");setNotice(`Order #${result.order.id} placed successfully`);setTimeout(()=>setNotice(""),4000);
+    // The server saves the delivery address and purchase history with the order; reload the account so the UI shows them.
+    // The order already succeeded, so a failed reload only leaves the old account data on screen.
+    try{const me=await api("/auth/me");setSession(getToken(),me.user);setUser(me.user);}catch{}
   }
   return <div className="app-shell">
     <Header category={category} setCategory={setCategory} query={query} setQuery={setQuery} cartCount={store.cart.reduce((n,i)=>n+i.quantity,0)} onCart={()=>setModal("cart")} onAccount={()=>setModal("account")} user={user} onLogout={logout}/>

@@ -34,22 +34,22 @@ export async function withTransaction(work) {
 }
 
 const demoProducts = [
-  {name:"NOVA Phone One",description:"A balanced everyday smartphone with a clean, considered design.",price:499,category:"Phones",image:"https://placehold.co/700x600/e5e5df/242520?text=NOVA+PHONE+01"},
-  {name:"NOVA Phone One Pro",description:"A refined phone experience for people who want more from every day.",price:699,category:"Phones",image:"https://placehold.co/700x600/e5e5df/242520?text=NOVA+PHONE+PRO"},
-  {name:"NOVA Phone Lite",description:"Essential performance and a lightweight form made for everyday life.",price:329,category:"Phones",image:"https://placehold.co/700x600/e5e5df/242520?text=NOVA+PHONE+LITE"},
-  {name:"NOVA Phone Max",description:"A larger display and long-lasting power for your daily routines.",price:599,category:"Phones",image:"https://placehold.co/700x600/e5e5df/242520?text=NOVA+PHONE+MAX"},
-  {name:"NOVA Headphone One",description:"Immersive sound with soft cushions and a comfortable over-ear fit.",price:179,category:"Headphones",image:"https://placehold.co/700x600/e4e5e0/242520?text=NOVA+HEADPHONE+01"},
-  {name:"NOVA Headphone Studio",description:"Detailed listening with a considered, studio-inspired sound profile.",price:229,category:"Headphones",image:"https://placehold.co/700x600/e4e5e0/242520?text=NOVA+STUDIO"},
-  {name:"NOVA Headphone Lite",description:"Lightweight wireless listening for commutes, work and weekends.",price:99,category:"Headphones",image:"https://placehold.co/700x600/e4e5e0/242520?text=NOVA+HEADPHONE+LITE"},
-  {name:"NOVA Headphone Max",description:"All-day comfort and rich sound in a minimal silhouette.",price:199,category:"Headphones",image:"https://placehold.co/700x600/e4e5e0/242520?text=NOVA+HEADPHONE+MAX"},
-  {name:"NOVA Buds One",description:"Compact wireless buds with clear calls and balanced everyday sound.",price:89,category:"Buds",image:"https://placehold.co/700x600/e6e6e1/242520?text=NOVA+BUDS+01"},
-  {name:"NOVA Buds Pro",description:"An elevated listening experience in a pocket-friendly charging case.",price:129,category:"Buds",image:"https://placehold.co/700x600/e6e6e1/242520?text=NOVA+BUDS+PRO"},
-  {name:"NOVA Buds Lite",description:"Simple, lightweight wireless audio for everyday listening.",price:49,category:"Buds",image:"https://placehold.co/700x600/e6e6e1/242520?text=NOVA+BUDS+LITE"},
-  {name:"NOVA Buds Sport",description:"A secure fit and reliable sound for movement and active days.",price:79,category:"Buds",image:"https://placehold.co/700x600/e6e6e1/242520?text=NOVA+BUDS+SPORT"},
-  {name:"NOVA Watch One",description:"A clean smartwatch interface for activity, time and notifications.",price:129,category:"Watches",image:"https://placehold.co/700x600/e4e5df/242520?text=NOVA+WATCH+01"},
-  {name:"NOVA Watch Pro",description:"A more advanced everyday watch with a bright, crisp display.",price:199,category:"Watches",image:"https://placehold.co/700x600/e4e5df/242520?text=NOVA+WATCH+PRO"},
-  {name:"NOVA Watch Lite",description:"The essentials in a slim, lightweight smartwatch.",price:79,category:"Watches",image:"https://placehold.co/700x600/e4e5df/242520?text=NOVA+WATCH+LITE"},
-  {name:"NOVA Watch Active",description:"Activity tracking and practical daily features in a durable form.",price:149,category:"Watches",image:"https://placehold.co/700x600/e4e5df/242520?text=NOVA+WATCH+ACTIVE"}
+  {name:"NOVA Phone One",description:"A balanced everyday smartphone with a clean, considered design.",price:499,category:"Phones",image:"/products/nova-phone-one.svg"},
+  {name:"NOVA Phone One Pro",description:"A refined phone experience for people who want more from every day.",price:699,category:"Phones",image:"/products/nova-phone-one-pro.svg"},
+  {name:"NOVA Phone Lite",description:"Essential performance and a lightweight form made for everyday life.",price:329,category:"Phones",image:"/products/nova-phone-lite.svg"},
+  {name:"NOVA Phone Max",description:"A larger display and long-lasting power for your daily routines.",price:599,category:"Phones",image:"/products/nova-phone-max.svg"},
+  {name:"NOVA Headphone One",description:"Immersive sound with soft cushions and a comfortable over-ear fit.",price:179,category:"Headphones",image:"/products/nova-headphone-one.svg"},
+  {name:"NOVA Headphone Studio",description:"Detailed listening with a considered, studio-inspired sound profile.",price:229,category:"Headphones",image:"/products/nova-headphone-studio.svg"},
+  {name:"NOVA Headphone Lite",description:"Lightweight wireless listening for commutes, work and weekends.",price:99,category:"Headphones",image:"/products/nova-headphone-lite.svg"},
+  {name:"NOVA Headphone Max",description:"All-day comfort and rich sound in a minimal silhouette.",price:199,category:"Headphones",image:"/products/nova-headphone-max.svg"},
+  {name:"NOVA Buds One",description:"Compact wireless buds with clear calls and balanced everyday sound.",price:89,category:"Buds",image:"/products/nova-buds-one.svg"},
+  {name:"NOVA Buds Pro",description:"An elevated listening experience in a pocket-friendly charging case.",price:129,category:"Buds",image:"/products/nova-buds-pro.svg"},
+  {name:"NOVA Buds Lite",description:"Simple, lightweight wireless audio for everyday listening.",price:49,category:"Buds",image:"/products/nova-buds-lite.svg"},
+  {name:"NOVA Buds Sport",description:"A secure fit and reliable sound for movement and active days.",price:79,category:"Buds",image:"/products/nova-buds-sport.svg"},
+  {name:"NOVA Watch One",description:"A clean smartwatch interface for activity, time and notifications.",price:129,category:"Watches",image:"/products/nova-watch-one.svg"},
+  {name:"NOVA Watch Pro",description:"A more advanced everyday watch with a bright, crisp display.",price:199,category:"Watches",image:"/products/nova-watch-pro.svg"},
+  {name:"NOVA Watch Lite",description:"The essentials in a slim, lightweight smartwatch.",price:79,category:"Watches",image:"/products/nova-watch-lite.svg"},
+  {name:"NOVA Watch Active",description:"Activity tracking and practical daily features in a durable form.",price:149,category:"Watches",image:"/products/nova-watch-active.svg"}
 ];
 
 // Creates the tables, then the demo catalogue (only into an empty products table) and the demo admin.

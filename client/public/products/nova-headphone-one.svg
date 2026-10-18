@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 600" width="700" height="600" role="img" aria-label="NOVA Headphone One">
+<defs><filter id="drop" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="8" dy="16" stdDeviation="14" flood-color="#1b1c18" flood-opacity=".24"/></filter><linearGradient id="shell" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#454741"/><stop offset="1" stop-color="#22241f"/></linearGradient><linearGradient id="band" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3c37"/><stop offset="1" stop-color="#262823"/></linearGradient></defs>
+<g filter="url(#drop)">
+<g transform="translate(350 318) scale(1.28)">
+  <path d="M -150 40 C -162 -250, 162 -250, 150 40" fill="none" stroke="url(#band)" stroke-width="24" stroke-linecap="round"/>
+  <path d="M -92 -122 C -58 -176, 58 -176, 92 -122" fill="none" stroke="#55574f" stroke-width="20" stroke-linecap="round"/>
+  <rect x="-158" y="-12" width="16" height="70" rx="6" fill="#9c9e95"/>
+  <ellipse cx="-112" cy="95" rx="40" ry="84" fill="#4d4f49"/>
+  <ellipse cx="-118" cy="95" rx="22" ry="62" fill="#3a3c36"/>
+  <ellipse cx="-152" cy="95" rx="62" ry="94" fill="url(#shell)"/>
+  <ellipse cx="-160" cy="95" rx="40" ry="66" fill="#34362f"/>
+  <path d="M -110 20 Q -140 2 -175 14" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="5" stroke-linecap="round"/>
+  <rect x="142" y="-12" width="16" height="70" rx="6" fill="#9c9e95"/>
+  <ellipse cx="112" cy="95" rx="40" ry="84" fill="#4d4f49"/>
+  <ellipse cx="118" cy="95" rx="22" ry="62" fill="#3a3c36"/>
+  <ellipse cx="152" cy="95" rx="62" ry="94" fill="url(#shell)"/>
+  <ellipse cx="160" cy="95" rx="40" ry="66" fill="#34362f"/>
+  <path d="M 110 20 Q 140 2 175 14" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="5" stroke-linecap="round"/>
+  <text x="-160" y="112" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="40" font-weight="800" letter-spacing="-3" fill="#6a6c64">N</text>
+</g>
+</g>
+</svg>

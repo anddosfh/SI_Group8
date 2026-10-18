@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 600" width="700" height="600" role="img" aria-label="NOVA Watch Active">
+<defs><filter id="drop" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="8" dy="16" stdDeviation="14" flood-color="#1b1c18" flood-opacity=".24"/></filter><linearGradient id="case" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#55636f"/><stop offset="1" stop-color="#2c363f"/></linearGradient><linearGradient id="strap" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#cbe85e"/><stop offset="1" stop-color="#a9cb35"/></linearGradient></defs>
+<g filter="url(#drop)">
+<g transform="translate(350 300) scale(1)">
+  <path d="M -60 -100 L -54 -272 Q 0 -282 54 -272 L 60 -100 Z" fill="url(#strap)"/>
+  <path d="M -60 100 L -54 272 Q 0 282 54 272 L 60 100 Z" fill="url(#strap)"/>
+  <rect x="-58" y="128" width="116" height="15" rx="3" fill="#8fae25"/>
+  <circle cx="0" cy="158" r="5" fill="#8fae25"/><circle cx="0" cy="186" r="5" fill="#8fae25"/><circle cx="0" cy="214" r="5" fill="#8fae25"/><circle cx="0" cy="242" r="5" fill="#8fae25"/>
+  <rect x="112" y="-48" width="17" height="44" rx="6" fill="#d8ff3e"/>
+  <rect x="112" y="16" width="9" height="36" rx="4" fill="#2c363f"/>
+  <circle r="120" fill="url(#case)"/><circle r="120" fill="none" stroke="#1f272e" stroke-width="5"/><circle r="104" fill="#0b0c0a"/>
+  <text x="0" y="-74" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" letter-spacing="2.5" fill="#d8ff3e">SAT 18</text>
+  <text x="0" y="-26" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="48" font-weight="300" fill="#f4f4ee">10:09</text>
+  <g transform="translate(0 50)"><circle r="33" fill="none" stroke="#d8ff3e" stroke-opacity=".22" stroke-width="7"/><circle r="33" fill="none" stroke="#d8ff3e" stroke-width="7" stroke-linecap="round" stroke-dasharray="161.7 207.3" transform="rotate(-90)"/><circle r="24" fill="none" stroke="#ff8a5c" stroke-opacity=".22" stroke-width="7"/><circle r="24" fill="none" stroke="#ff8a5c" stroke-width="7" stroke-linecap="round" stroke-dasharray="82.9 150.8" transform="rotate(-90)"/><circle r="15" fill="none" stroke="#8fe3bd" stroke-opacity=".22" stroke-width="7"/><circle r="15" fill="none" stroke="#8fe3bd" stroke-width="7" stroke-linecap="round" stroke-dasharray="84.8 94.2" transform="rotate(-90)"/></g>
+</g>
+</g>
+</svg>

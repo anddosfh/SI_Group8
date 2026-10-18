@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 600" width="700" height="600" role="img" aria-label="NOVA Headphone Lite">
+<defs><filter id="drop" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="8" dy="16" stdDeviation="14" flood-color="#1b1c18" flood-opacity=".24"/></filter><linearGradient id="shell" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eeece3"/><stop offset="1" stop-color="#cbc8bb"/></linearGradient><linearGradient id="band" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9d6ca"/><stop offset="1" stop-color="#c2bfb2"/></linearGradient></defs>
+<g filter="url(#drop)">
+<g transform="translate(350 318) scale(1.1520000000000001)">
+  <path d="M -150 40 C -162 -250, 162 -250, 150 40" fill="none" stroke="url(#band)" stroke-width="18" stroke-linecap="round"/>
+  <path d="M -92 -122 C -58 -176, 58 -176, 92 -122" fill="none" stroke="#b5b2a5" stroke-width="14" stroke-linecap="round"/>
+  <rect x="-158" y="-12" width="16" height="70" rx="6" fill="#a8a59a"/>
+  <ellipse cx="-112" cy="95" rx="40" ry="84" fill="#bdb9ac"/>
+  <ellipse cx="-118" cy="95" rx="22" ry="62" fill="#a9a598"/>
+  <ellipse cx="-152" cy="95" rx="62" ry="94" fill="url(#shell)"/>
+  <ellipse cx="-160" cy="95" rx="40" ry="66" fill="#dedbd0"/>
+  <path d="M -110 20 Q -140 2 -175 14" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="5" stroke-linecap="round"/>
+  <rect x="142" y="-12" width="16" height="70" rx="6" fill="#a8a59a"/>
+  <ellipse cx="112" cy="95" rx="40" ry="84" fill="#bdb9ac"/>
+  <ellipse cx="118" cy="95" rx="22" ry="62" fill="#a9a598"/>
+  <ellipse cx="152" cy="95" rx="62" ry="94" fill="url(#shell)"/>
+  <ellipse cx="160" cy="95" rx="40" ry="66" fill="#dedbd0"/>
+  <path d="M 110 20 Q 140 2 175 14" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="5" stroke-linecap="round"/>
+  <text x="-160" y="112" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="40" font-weight="800" letter-spacing="-3" fill="#a7a497">N</text>
+</g>
+</g>
+</svg>

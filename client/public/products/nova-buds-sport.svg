@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 600" width="700" height="600" role="img" aria-label="NOVA Buds Sport">
+<defs><filter id="drop" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="8" dy="16" stdDeviation="14" flood-color="#1b1c18" flood-opacity=".24"/></filter><linearGradient id="case" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34404b"/><stop offset="1" stop-color="#1b232a"/></linearGradient><linearGradient id="budBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a4651"/><stop offset="1" stop-color="#1e262d"/></linearGradient><clipPath id="caseClip"><rect x="-125" y="-85" width="250" height="170" rx="80"/></clipPath></defs>
+<g filter="url(#drop)">
+<g transform="translate(350 300) scale(1.22) translate(-380 -365)">
+<g transform="translate(268 360) scale(1)">
+  <rect x="-125" y="-85" width="250" height="170" rx="80" fill="url(#case)" stroke="#161d23" stroke-width="2"/>
+  <g clip-path="url(#caseClip)"><rect x="-125" y="-30" width="250" height="3" fill="#56636f"/><rect x="-125" y="-85" width="250" height="20" fill="#fff" opacity=".12"/></g>
+  <circle cx="0" cy="18" r="4.5" fill="#d8ff3e"/>
+  <text x="0" y="58" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" letter-spacing="4" fill="#56636f">NOVA</text>
+</g>
+<g transform="translate(478 292) rotate(16)"><path d="M 18 -34 C 64 -96, 128 -24, 66 54" fill="none" stroke="#c9e85a" stroke-width="10" stroke-linecap="round"/>
+  <rect x="-14" y="8" width="28" height="98" rx="14" fill="url(#budBody)"/>
+  <ellipse cx="0" cy="0" rx="37" ry="41" fill="url(#budBody)"/>
+  <ellipse cx="-31" cy="-9" rx="16" ry="21" fill="#d8ff3e"/>
+  <circle cx="11" cy="-14" r="5.5" fill="#8b97a1"/>
+  <circle cx="0" cy="96" r="4" fill="#8b97a1"/></g>
+<g transform="translate(566 368) rotate(-14) scale(.94)"><path d="M 18 -34 C 64 -96, 128 -24, 66 54" fill="none" stroke="#c9e85a" stroke-width="10" stroke-linecap="round"/>
+  <rect x="-14" y="8" width="28" height="98" rx="14" fill="url(#budBody)"/>
+  <ellipse cx="0" cy="0" rx="37" ry="41" fill="url(#budBody)"/>
+  <ellipse cx="-31" cy="-9" rx="16" ry="21" fill="#d8ff3e"/>
+  <circle cx="11" cy="-14" r="5.5" fill="#8b97a1"/>
+  <circle cx="0" cy="96" r="4" fill="#8b97a1"/></g>
+</g>
+</g>
+</svg>

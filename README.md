@@ -62,6 +62,9 @@ Open the Vite URL shown in the terminal (usually http://localhost:5173).
 4. Keep your group's `docs` and `tests` files if they contain coursework material you need. The server's new tests folder is optional.
 5. Install dependencies in both folders using the commands above.
 
+## Product images
+The demo products use SVG illustrations from `client/public/products/`; Vite serves that folder at `/products/…`, and each product's `image` column stores that path (e.g. `/products/nova-phone-one.svg`). To use another image, put the file into that folder, commit it so the whole group has it, and enter `/products/<file name>` as the image URL in the admin dashboard. Full `https://` image URLs work as well.
+
 ## Demo admin
 Email: `admin@nova.local`
 Password: `NovaAdmin123!`

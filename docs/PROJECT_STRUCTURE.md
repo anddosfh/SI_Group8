@@ -9,6 +9,7 @@ nova_si/
 │   ├── package.json
 │   ├── index.html
 │   ├── vite.config.js
+│   ├── public/products/   # product images (SVG), served at /products/…
 │   └── src/
 │       ├── main.jsx
 │       ├── App.jsx

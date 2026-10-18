@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 600" width="700" height="600" role="img" aria-label="NOVA Phone One Pro">
+<defs><filter id="drop" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="8" dy="16" stdDeviation="14" flood-color="#1b1c18" flood-opacity=".24"/></filter><radialGradient id="lensGlass" cx=".38" cy=".34" r=".7"><stop offset="0" stop-color="#626872"/><stop offset=".55" stop-color="#1e201d"/><stop offset="1" stop-color="#0a0b09"/></radialGradient><linearGradient id="back" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4b4e48"/><stop offset="1" stop-color="#262823"/></linearGradient><linearGradient id="screen" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#23251f"/><stop offset="1" stop-color="#0c0d0b"/></linearGradient><radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#d8ff3e" stop-opacity=".95"/><stop offset=".55" stop-color="#d8ff3e" stop-opacity=".35"/><stop offset="1" stop-color="#d8ff3e" stop-opacity="0"/></radialGradient><clipPath id="screenClip"><rect x="-92" y="-192" width="184" height="384" rx="27"/></clipPath><clipPath id="backClip"><rect x="-95" y="-195" width="190" height="390" rx="30"/></clipPath></defs>
+<g filter="url(#drop)">
+<g transform="translate(350 300) scale(1.12) translate(-349 -300)">
+<g transform="translate(262 296) rotate(-5) scale(1)">
+  <rect x="-100" y="-200" width="200" height="400" rx="34" fill="#1b1d19"/>
+  <rect x="-92" y="-192" width="184" height="384" rx="27" fill="url(#screen)"/>
+  <g clip-path="url(#screenClip)"><circle cx="0" cy="70" r="150" fill="url(#glow)"/><circle cx="0" cy="70" r="92" fill="none" stroke="#d8ff3e" stroke-opacity=".35" stroke-width="1.5"/><circle cx="0" cy="70" r="122" fill="none" stroke="#d8ff3e" stroke-opacity=".18" stroke-width="1.5"/></g>
+  <rect x="-25" y="-181" width="50" height="14" rx="7" fill="#040404"/>
+  <text x="0" y="-108" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="44" font-weight="300" fill="#f4f4ee">09:41</text>
+  <text x="0" y="-84" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" letter-spacing="2.5" fill="#b9bab2">SATURDAY 18 OCTOBER</text>
+  <text x="0" y="94" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="70" font-weight="800" letter-spacing="-6" fill="#171815">N</text>
+  <rect x="-40" y="176" width="80" height="4" rx="2" fill="#f4f4ee" opacity=".7"/>
+</g>
+<g transform="translate(436 304) rotate(8) scale(1)">
+  <rect x="99" y="-125" width="5" height="58" rx="2.5" fill="#1b1d19"/>
+  <rect x="99" y="-45" width="5" height="34" rx="2.5" fill="#1b1d19"/>
+  <rect x="-100" y="-200" width="200" height="400" rx="34" fill="#1b1d19"/>
+  <rect x="-95" y="-195" width="190" height="390" rx="30" fill="url(#back)"/>
+  <g clip-path="url(#backClip)"><path d="M -95 40 L 95 -110 L 95 -60 L -95 90 Z" fill="#fff" opacity=".07"/></g>
+  <rect x="-84" y="-182" width="134" height="134" rx="36" fill="#3a3c37" stroke="#d8ff3e" stroke-width="2.5"/><g transform="translate(-48 -146)"><circle r="25" fill="#3a3c37"/><circle r="20" fill="url(#lensGlass)"/><circle r="8" fill="#070806"/><circle cx="-7.5" cy="-8" r="3.25" fill="#fff" opacity=".6"/></g><g transform="translate(-48 -84)"><circle r="25" fill="#3a3c37"/><circle r="20" fill="url(#lensGlass)"/><circle r="8" fill="#070806"/><circle cx="-7.5" cy="-8" r="3.25" fill="#fff" opacity=".6"/></g><g transform="translate(13 -115)"><circle r="25" fill="#3a3c37"/><circle r="20" fill="url(#lensGlass)"/><circle r="8" fill="#070806"/><circle cx="-7.5" cy="-8" r="3.25" fill="#fff" opacity=".6"/></g><circle cx="15" cy="-164" r="6" fill="#f3f1e4"/><circle cx="15" cy="-66" r="6" fill="#20221f"/>
+  <text x="0" y="78" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="76" font-weight="800" letter-spacing="-6" fill="#5d6059">N</text>
+  <text x="0" y="172" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="9" letter-spacing="4" fill="#5d6059">NOVA</text>
+</g>
+</g>
+</g>
+</svg>
