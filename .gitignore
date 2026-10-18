@@ -1,0 +1,7 @@
+node_modules/
+dist/
+
+# server/.env holds the database password (e.g. the shared Neon connection string); never commit it.
+.env
+.env.*
+!.env.example
