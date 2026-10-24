@@ -1,0 +1,23 @@
+{
+  "exportedAt": "2026-10-24T20:00:00Z",
+  "products": [
+    {
+      "id": "ERP-001",
+      "name": "NOVA Test Headphones",
+      "description": "Test product imported from the ERP.",
+      "price": 89.99,
+      "category": "Headphones",
+      "stock": 12,
+      "image": "/products/nova-headphone-one.svg"
+    },
+    {
+      "id": "ERP-002",
+      "name": "NOVA Test Watch",
+      "description": "Test smartwatch imported from the ERP.",
+      "price": 129.99,
+      "category": "Watches",
+      "stock": 0,
+      "image": "/products/nova-watch-one.svg"
+    }
+  ]
+}
