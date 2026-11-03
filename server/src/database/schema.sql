@@ -11,14 +11,38 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS products (
-  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name        TEXT NOT NULL,
-  description TEXT NOT NULL,
-  price       NUMERIC NOT NULL CHECK (price > 0),
-  category    TEXT NOT NULL,
-  image       TEXT NOT NULL DEFAULT '',
-  active      BOOLEAN NOT NULL DEFAULT TRUE
+  id             INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  erp_product_id TEXT UNIQUE,
+  name           TEXT NOT NULL,
+  description    TEXT NOT NULL,
+  price          NUMERIC NOT NULL CHECK (price > 0),
+  category       TEXT NOT NULL,
+  image          TEXT NOT NULL DEFAULT '',
+  stock          INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
+  active         BOOLEAN NOT NULL DEFAULT TRUE
 );
+
+-- Lab 2: ERP identity and inventory
+ALTER TABLE products
+  ADD COLUMN IF NOT EXISTS erp_product_id TEXT;
+
+ALTER TABLE products
+  ADD COLUMN IF NOT EXISTS stock INTEGER NOT NULL DEFAULT 0;
+
+CREATE UNIQUE INDEX IF NOT EXISTS products_erp_product_id_unique
+  ON products (erp_product_id)
+  WHERE erp_product_id IS NOT NULL;
+
+-- Safe for databases that already have the Lab 1 products table.
+ALTER TABLE products
+  ADD COLUMN IF NOT EXISTS erp_product_id TEXT;
+
+ALTER TABLE products
+  ADD COLUMN IF NOT EXISTS stock INTEGER NOT NULL DEFAULT 0;
+
+CREATE UNIQUE INDEX IF NOT EXISTS products_erp_product_id_unique
+  ON products (erp_product_id)
+  WHERE erp_product_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS orders (
   id             INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
