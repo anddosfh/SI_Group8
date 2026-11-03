@@ -2,7 +2,8 @@ import { query } from "../database/db.js";
 import { UserError } from "../utils/errors.js";
 import { cleanText, positiveId, positivePrice } from "../validators/common.js";
 const categories = ["Phones","Headphones","Buds","Watches"];
-const productColumns = "id, name, description, price, category, image, active";
+const productColumns =
+  "id, erp_product_id, name, description, price, category, image, stock, active";
 export async function listProducts() {
   return (await query(`SELECT ${productColumns} FROM products WHERE active ORDER BY id`)).rows;
 }
