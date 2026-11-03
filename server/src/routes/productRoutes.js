@@ -1,9 +1,11 @@
 import { Router } from "express";
 import {
   addProduct,
+  getImports,
   getProducts,
   removeProduct,
-  importProductFile
+  syncErpProducts,
+  uploadProductFile
 } from "../controllers/productController.js";
 import { adminRequired, authRequired } from "../middleware/auth.js";
 
@@ -13,12 +15,10 @@ router.get("/", getProducts);
 
 router.post("/", authRequired, adminRequired, addProduct);
 
-router.post(
-  "/import",
-  authRequired,
-  adminRequired,
-  importProductFile
-);
+// Lab 2: ERP product import
+router.post("/import", authRequired, adminRequired, uploadProductFile);
+router.post("/import/erp", authRequired, adminRequired, syncErpProducts);
+router.get("/imports", authRequired, adminRequired, getImports);
 
 router.delete("/:id", authRequired, adminRequired, removeProduct);
 

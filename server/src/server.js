@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { DATABASE_URL, PORT } from "./config/env.js";
 import { initDatabase } from "./database/db.js";
+import { startErpTransfer } from "./services/erpTransferService.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
@@ -21,7 +22,8 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "1mb" }));
+// Product file uploads (up to 2 MB) arrive as JSON-encoded text, which is somewhat larger than the file.
+app.use(express.json({ limit: "3mb" }));
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -47,6 +49,14 @@ app.use((req, res) => {
 
 // Error handler — must come last
 app.use((err, req, res, next) => {
+  // Errors raised by express.json() before a route runs.
+  if (err.type === "entity.too.large") {
+    return res.status(413).json({ error: "The request is too large (at most 3 MB)." });
+  }
+  if (err.type === "entity.parse.failed") {
+    return res.status(400).json({ error: "The request body is not valid JSON." });
+  }
+
   console.error("Server error:", err);
 
   res.status(500).json({
@@ -65,6 +75,7 @@ initDatabase()
         `NOVA Gadgets API running at http://localhost:${PORT} ` +
         `(database: ${hostname}${pathname})`
       );
+      startErpTransfer();
     });
   })
   .catch((error) => {

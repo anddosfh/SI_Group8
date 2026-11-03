@@ -1,3 +1,5 @@
+// Shop categories. "Other" holds ERP products, which arrive without a category.
+export const CATEGORIES = ["Phones", "Headphones", "Buds", "Watches", "Other"];
 export function validEmail(email) {
   return typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }

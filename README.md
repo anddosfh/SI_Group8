@@ -1,4 +1,4 @@
-# NOVA Gadgets — System Integration Lab 1
+# NOVA Gadgets — System Integration Labs 1 & 2
 
 A full-stack electronics storefront inspired by minimalist product-led design. Uses an existing-style `client/` and `server/` structure.
 
@@ -61,6 +61,44 @@ Open the Vite URL shown in the terminal (usually http://localhost:5173).
 3. Copy the `client` and `server` folders from this ZIP into your existing `nova_si` folder and allow replacement of old source files after backup.
 4. Keep your group's `docs` and `tests` files if they contain coursework material you need. The server's new tests folder is optional.
 5. Install dependencies in both folders using the commands above.
+
+## Lab 2 — product transfer from the Mini-ERP
+
+The Mini-ERP is the master for product data (ID, name, description, price, stock); the shop imports it from files.
+
+```text
+Mini-ERP ── GET /rest/api/getProducts (CSV) ──▶ server/data/erp-transfer/inbox/erp-products_20261103-153000.csv
+                                                        │ import (one transaction per file)
+                                       success ─────────┴───────── rejected
+                                          ▼                           ▼
+                                   archive/<file>          error/<file> + <file>.error.txt
+```
+
+**ERP setup:** copy the ERP test data with the NOVA products into the ERP, see [erp/README.md](erp/README.md).
+
+**When files are transferred** (`server/.env`, see `.env.example`):
+- *On demand*: **Pull from ERP now** in the admin dashboard exports a file from the ERP into the inbox and imports it.
+- *Periodically*: `ERP_SYNC_INTERVAL_MINUTES=5` does the same every 5 minutes. Default `0` (off): with the shared Neon database, enable it on one machine only, because every member's ERP keeps its own in-memory data.
+- *Dropped files*: any `.csv`/`.json` put into `server/data/erp-transfer/inbox/` (e.g. an export downloaded in the browser) is picked up within `ERP_INBOX_POLL_SECONDS` (default 30).
+- *Upload*: the dashboard also accepts a file directly; a copy is kept in `archive/` or `error/`.
+
+**Naming convention:** `erp-products_YYYYMMDD-HHMMSS.csv` (UTC export time). Files with this name are complete exports: ERP products missing from them are deactivated, and a file that is not newer than the last imported export is skipped (moved to `archive/` with a `.skipped.txt` note), so a delayed old file cannot overwrite newer data. Files are written as `<name>.part` and renamed when complete, so a half-written file is never imported.
+
+**File format** (the ERP's export): `productID,name,description,price,stock`, one product per line, price with currency (`1200.00 EUR`). The importer also reads other CSV layouts (`;` as separator, decimal commas, quoted values, headers such as `Product ID` or `Product Name`) and JSON (an array or `{"products": [...]}`).
+
+| ERP field | Shop column | Rule |
+|---|---|---|
+| productID | `erp_product_id` | key for matching; required, max. 50 characters, unique per file |
+| name | `name` | required |
+| description | `description` | optional; empty keeps the shop's text |
+| price (+ currency) | `price` | required, > 0; only EUR is accepted |
+| stock | `stock` | whole number ≥ 0; checkout sells ERP products only while stock lasts |
+| – | `category` | the ERP has none: new products get `Other`, existing ones keep theirs |
+| – | `image` | new products get a placeholder, existing ones keep theirs |
+
+**Error handling:** a file is imported completely or not at all. Every problem is reported with its line number (missing columns, missing or invalid price/stock, unsupported currency, duplicate product IDs, empty or oversized file, unclosed quotes). The ERP's export does not quote values, so commas inside a description split it into extra columns; the importer joins them back. A complete export that would deactivate more than half of the ERP products at once is rejected as a safety stop (typically an ERP that has not loaded its data yet). If the ERP is unreachable or rejects the login, the attempt is logged and the next interval tries again. Every run is listed under **Import history** in the admin dashboard (table `product_imports`).
+
+**Consistency and limits:** the ERP is the source of truth for price and stock; products are matched only by `productID`, so importing the same file twice changes nothing. Shop orders reduce the shop's stock but do not reach the ERP yet (Lab 3), so the next import resets the stock to the ERP's figure. File transfer is simple and decoupled, but the shop is only as current as the last file.
 
 ## Product images
 The demo products use SVG illustrations from `client/public/products/`; Vite serves that folder at `/products/…`, and each product's `image` column stores that path (e.g. `/products/nova-phone-one.svg`). To use another image, put the file into that folder, commit it so the whole group has it, and enter `/products/<file name>` as the image URL in the admin dashboard. Full `https://` image URLs work as well.

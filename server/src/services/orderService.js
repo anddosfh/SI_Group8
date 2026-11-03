@@ -13,7 +13,8 @@ export async function createOrder(userId, items, address) {
   return withTransaction(async client=>{
     const {rows:[user]}=await client.query("SELECT name, email, address FROM users WHERE id = $1",[userId]);
     const ids=items.map(item=>positiveId(item?.productId));
-    const {rows:products}=await client.query("SELECT id, name, price FROM products WHERE id = ANY($1::int[]) AND active",[ids.filter(Boolean)]);
+    // FOR UPDATE keeps concurrent checkouts and ERP imports from changing the stock between check and update.
+    const {rows:products}=await client.query("SELECT id, name, price, stock, erp_product_id FROM products WHERE id = ANY($1::int[]) AND active FOR UPDATE",[ids.filter(Boolean)]);
     const normalized=[];
     for(const [index,item] of items.entries()){
       const product=products.find(p=>p.id===ids[index]);
@@ -22,10 +23,17 @@ export async function createOrder(userId, items, address) {
       const existing=normalized.find(i=>i.productId===product.id);
       if(existing)existing.quantity+=quantity;else normalized.push({productId:product.id,name:product.name,unitPrice:product.price,quantity});
     }
+    // ERP products sell only while the imported stock lasts. Shop orders do not reach the ERP yet (Lab 3), so the next
+    // ERP import replaces the reduced figure with the ERP's own stock again.
+    for(const i of normalized){
+      const product=products.find(p=>p.id===i.productId);
+      if(product.erp_product_id!==null&&i.quantity>product.stock)throw new UserError(product.stock===0?`${product.name} is out of stock.`:`Only ${product.stock} × ${product.name} in stock.`);
+    }
     const total=Math.round(normalized.reduce((sum,i)=>sum+i.unitPrice*i.quantity,0)*100)/100;
     const {rows:[{id}]}=await client.query("INSERT INTO orders (user_id, customer_name, customer_email, address, total) VALUES ($1, $2, $3, $4, $5) RETURNING id",
       [userId,user.name,user.email,cleanText(address,300)||user.address||"",total]);
     for(const i of normalized)await client.query("INSERT INTO order_items (order_id, product_id, name, unit_price, quantity) VALUES ($1, $2, $3, $4, $5)",[id,i.productId,i.name,i.unitPrice,i.quantity]);
+    for(const i of normalized)await client.query("UPDATE products SET stock = stock - $2 WHERE id = $1 AND erp_product_id IS NOT NULL",[i.productId,i.quantity]);
     if(address)await client.query("UPDATE users SET address = $1 WHERE id = $2",[cleanText(address,300),userId]);
     return (await client.query(`${orderSelect} WHERE o.id = $1`,[id])).rows[0];
   });

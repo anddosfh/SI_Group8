@@ -17,6 +17,53 @@ const money = (value) =>
     maximumFractionDigits: 2
   })}`;
 
+const categories = ["Phones", "Headphones", "Buds", "Watches", "Other"];
+
+const importSources = {
+  upload: "Upload",
+  inbox: "Inbox folder",
+  "erp-export": "ERP export"
+};
+
+const importStatusClass = {
+  success: "status-completed",
+  failed: "status-cancelled",
+  skipped: "status-pending"
+};
+
+function ImportReport({ report }) {
+  const succeeded = report.status === "success";
+
+  return (
+    <div className={succeeded ? "import-report" : "import-report import-report-failed"}>
+      <p>
+        <strong>{report.fileName}</strong> · {report.status}
+        {report.fullSync ? " · complete export" : ""}
+      </p>
+
+      {succeeded && (
+        <p>
+          {report.received} received · {report.inserted} new · {report.updated} updated ·{" "}
+          {report.unchanged} unchanged · {report.deactivated} deactivated
+        </p>
+      )}
+
+      {report.errors.length > 0 && (
+        <ul>
+          {report.errors.map((error, index) => <li key={index}>{error}</li>)}
+        </ul>
+      )}
+
+      {succeeded && report.changes.length > 0 && (
+        <ul>
+          {report.changes.slice(0, 12).map((change, index) => <li key={index}>{change}</li>)}
+          {report.changes.length > 12 && <li>… and {report.changes.length - 12} more changes</li>}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function AdminModal({ onClose, onChanged }) {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -27,6 +74,9 @@ export default function AdminModal({ onClose, onChanged }) {
   const [analytics, setAnalytics] = useState(null);
   const [analyticsError, setAnalyticsError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [imports, setImports] = useState([]);
+  const [transfer, setTransfer] = useState(null);
+  const [fullSync, setFullSync] = useState(true);
 
   async function load() {
     const [p, o] = await Promise.all([
@@ -52,11 +102,17 @@ export default function AdminModal({ onClose, onChanged }) {
     }
   }
 
+  async function loadImports() {
+    const data = await api("/products/imports");
+    setImports(data.imports || []);
+    setTransfer(data.transfer || null);
+  }
+
   async function refreshAll() {
     setMessage("");
 
     try {
-      await Promise.all([load(), loadAnalytics()]);
+      await Promise.all([load(), loadAnalytics(), loadImports()]);
     } catch (error) {
       setMessage(error.message);
     }
@@ -65,6 +121,7 @@ export default function AdminModal({ onClose, onChanged }) {
   useEffect(() => {
     load().catch((error) => setMessage(error.message));
     loadAnalytics();
+    loadImports().catch((error) => setMessage(error.message));
   }, []);
 
   async function add(event) {
@@ -126,6 +183,13 @@ export default function AdminModal({ onClose, onChanged }) {
     }
   }
 
+  async function showImport(report) {
+    setImportReport(report);
+    await Promise.all([load(), loadAnalytics(), loadImports()]);
+    onChanged();
+  }
+
+  // Manual transfer: the server parses the file, so the dashboard only sends its name and text.
   async function importFile(event) {
     const input = event.currentTarget;
     const file = input.files?.[0];
@@ -137,40 +201,49 @@ export default function AdminModal({ onClose, onChanged }) {
     setImporting(true);
 
     try {
-      if (!file.name.toLowerCase().endsWith(".json")) {
-        throw new Error(
-          "This importer currently accepts JSON files only."
-        );
+      if (!/\.(csv|json)$/i.test(file.name)) {
+        throw new Error("Choose the ERP's CSV export (.csv) or a JSON file (.json).");
       }
 
-      if (file.size > 1024 * 1024) {
-        throw new Error("The file must be smaller than 1 MB.");
-      }
-
-      let payload;
-
-      try {
-        payload = JSON.parse(await file.text());
-      } catch {
-        throw new Error("The selected file is not valid JSON.");
+      if (file.size > 2 * 1024 * 1024) {
+        throw new Error("The file must be smaller than 2 MB.");
       }
 
       const result = await api("/products/import", {
         method: "POST",
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ fileName: file.name, content: await file.text(), fullSync })
       });
 
-      setImportReport(result);
-      setMessage(result.message || "Product import completed.");
-
-      await load();
-      await loadAnalytics();
-      onChanged();
+      await showImport(result.report);
+      setMessage(`${file.name} imported successfully.`);
     } catch (error) {
+      // A rejected file still comes with its report, which lists every problem.
+      if (error.body?.report) await showImport(error.body.report).catch(() => {});
       setMessage(error.message || "Product import failed.");
     } finally {
       setImporting(false);
       input.value = "";
+    }
+  }
+
+  async function pullFromErp() {
+    setMessage("");
+    setImportReport(null);
+    setImporting(true);
+
+    try {
+      const result = await api("/products/import/erp", { method: "POST" });
+      const report = result.imports.at(-1) || null;
+
+      if (report) await showImport(report);
+
+      if (result.exportError) setMessage(`ERP export failed: ${result.exportError}`);
+      else if (report?.status === "success") setMessage("ERP products imported successfully.");
+      else if (report) setMessage(`The ERP export was ${report.status}.`);
+    } catch (error) {
+      setMessage(error.message || "ERP export failed.");
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -452,33 +525,86 @@ export default function AdminModal({ onClose, onChanged }) {
       {/* LAB 2: ERP PRODUCT IMPORT */}
       <h3 className="section-mini-title">ERP product import</h3>
 
-      <div className="admin-form">
+      <div className="erp-import">
         <p className="fine-print">
-          Select a JSON product export from the Mini ERP.
-          Existing ERP products will be updated and new products added.
+          Product data comes from the Mini-ERP's CSV export. New products are added,
+          prices and stock of existing ones updated. Files are imported completely or not at all.
         </p>
 
-        <label htmlFor="erp-product-file">
-          Select ERP export file
+        {transfer && (
+          <p className="fine-print">
+            ERP export: {transfer.erpExportUrl} (
+            {transfer.syncIntervalMinutes > 0
+              ? `every ${transfer.syncIntervalMinutes} min`
+              : "on demand"}
+            ) · Inbox: {transfer.inboxFolder} (
+            {transfer.inboxPollSeconds > 0
+              ? `checked every ${transfer.inboxPollSeconds} s`
+              : "checked on demand"}
+            ) · File names: {transfer.fileNamePattern}
+          </p>
+        )}
+
+        <div className="erp-import-actions">
+          <button
+            type="button"
+            className="button button-dark button-small"
+            onClick={pullFromErp}
+            disabled={importing}
+          >
+            Pull from ERP now
+          </button>
+
+          <label className="button button-outline button-small erp-file-button">
+            Upload export file (.csv, .json)
+            <input
+              type="file"
+              accept=".csv,.json,text/csv,application/json"
+              onChange={importFile}
+              disabled={importing}
+            />
+          </label>
+        </div>
+
+        <label className="erp-full-sync">
+          <input
+            type="checkbox"
+            checked={fullSync}
+            onChange={(e) => setFullSync(e.target.checked)}
+          />
+          Uploaded file is a complete export: deactivate ERP products missing from it
         </label>
 
-        <input
-          id="erp-product-file"
-          type="file"
-          accept=".json,application/json"
-          onChange={importFile}
-          disabled={importing}
-        />
+        {importing && <p className="fine-print">Importing products...</p>}
 
-        {importing && <p>Importing products...</p>}
+        {importReport && <ImportReport report={importReport} />}
 
-        {importReport && (
-          <div className="form-success">
-            <p>Products received: {importReport.received}</p>
-            <p>New products: {importReport.inserted}</p>
-            <p>Updated products: {importReport.updated}</p>
-          </div>
-        )}
+        <h4 className="erp-history-title">Import history</h4>
+
+        <div className="admin-table">
+          {imports.length === 0 ? (
+            <p className="fine-print">No imports yet.</p>
+          ) : (
+            imports.map((entry) => (
+              <div className="admin-row" key={entry.id}>
+                <span>
+                  {entry.fileName}
+                  <small>
+                    {new Date(entry.createdAt).toLocaleString("de-DE")} ·{" "}
+                    {importSources[entry.source] || entry.source} ·{" "}
+                    {entry.status === "success"
+                      ? `${entry.inserted} new, ${entry.updated} updated, ${entry.deactivated} deactivated`
+                      : entry.errors[0]}
+                  </small>
+                </span>
+
+                <span className={`status ${importStatusClass[entry.status] || ""}`}>
+                  {entry.status}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* LAB 1: ADD PRODUCT */}
@@ -525,7 +651,7 @@ export default function AdminModal({ onClose, onChanged }) {
             setForm({ ...form, category: e.target.value })
           }
         >
-          {["Phones", "Headphones", "Buds", "Watches"].map((category) => (
+          {categories.map((category) => (
             <option key={category} value={category}>
               {category}
             </option>
@@ -572,7 +698,7 @@ export default function AdminModal({ onClose, onChanged }) {
               <small>
                 {product.category} · {money(product.price)}
                 {product.erp_product_id
-                  ? ` · Stock: ${product.stock}`
+                  ? ` · ERP ${product.erp_product_id} · Stock: ${product.stock}`
                   : ""}
               </small>
             </span>

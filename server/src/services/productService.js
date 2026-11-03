@@ -1,7 +1,6 @@
 import { query } from "../database/db.js";
 import { UserError } from "../utils/errors.js";
-import { cleanText, positiveId, positivePrice } from "../validators/common.js";
-const categories = ["Phones","Headphones","Buds","Watches"];
+import { CATEGORIES as categories, cleanText, positiveId, positivePrice } from "../validators/common.js";
 const productColumns =
   "id, erp_product_id, name, description, price, category, image, stock, active";
 export async function listProducts() {

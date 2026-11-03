@@ -24,6 +24,12 @@ export async function api(path, options = {}) {
     }
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.error || `Request failed (${response.status})`);
+  if (!response.ok) {
+    const error = new Error(body.error || `Request failed (${response.status})`);
+    // Lets callers show details the API sent along, e.g. the report of a rejected product file.
+    error.status = response.status;
+    error.body = body;
+    throw error;
+  }
   return body;
 }

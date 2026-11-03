@@ -1,0 +1,19 @@
+ID,productID,name,description,price,currency_code,stock,createdAt,createdBy,modifiedAt,modifiedBy
+67d85897-dd5a-49b3-bf5c-64df5342b5c2,"DXTR1000","MTB",,"1200.00","EUR",25
+0d785839-a5d9-428e-9a9b-15b4e4895e12,"GRVL1000","Gravel",,"2300.00","EUR",15
+fc54ed75-92fb-4d7b-9f89-7333d43da809,"NOVA-PHONE-ONE","NOVA Phone One","A balanced everyday smartphone with a clean, considered design.","499.00","EUR",40
+0912c05e-fdfc-4c03-bc5d-abf48c24e3f3,"NOVA-PHONE-ONE-PRO","NOVA Phone One Pro","A refined phone experience for people who want more from every day.","699.00","EUR",25
+1838d9a0-d5eb-4403-bc2d-fa35c625d721,"NOVA-PHONE-LITE","NOVA Phone Lite","Essential performance and a lightweight form made for everyday life.","329.00","EUR",60
+c7fd43ec-1158-4e4e-90c3-2f38e49766d4,"NOVA-PHONE-MAX","NOVA Phone Max","A larger display and long-lasting power for your daily routines.","599.00","EUR",18
+50018333-e7f0-4cbc-99d8-3b36b740ac76,"NOVA-HEADPHONE-ONE","NOVA Headphone One","Immersive sound with soft cushions and a comfortable over-ear fit.","179.00","EUR",35
+431bf16f-9466-4204-9294-ce29afbebb50,"NOVA-HEADPHONE-STUDIO","NOVA Headphone Studio","Detailed listening with a considered, studio-inspired sound profile.","229.00","EUR",12
+c69ccad0-5569-4c79-a7b2-3ba6ac0d7d11,"NOVA-HEADPHONE-LITE","NOVA Headphone Lite","Lightweight wireless listening for commutes, work and weekends.","99.00","EUR",80
+4ef46c2a-5a82-4120-af1e-7cb2802ef7a0,"NOVA-HEADPHONE-MAX","NOVA Headphone Max","All-day comfort and rich sound in a minimal silhouette.","199.00","EUR",20
+667dfc77-3a52-4f8e-b112-facdd5c695d5,"NOVA-BUDS-ONE","NOVA Buds One","Compact wireless buds with clear calls and balanced everyday sound.","89.00","EUR",120
+c490ef92-6ded-4e03-ae16-b7a774d0b200,"NOVA-BUDS-PRO","NOVA Buds Pro","An elevated listening experience in a pocket-friendly charging case.","129.00","EUR",45
+b5cf82a6-8519-49ca-8ec3-e5d419b81561,"NOVA-BUDS-LITE","NOVA Buds Lite","Simple, lightweight wireless audio for everyday listening.","49.00","EUR",150
+b072b10b-c507-4aeb-a314-4f0d251a02c9,"NOVA-BUDS-SPORT","NOVA Buds Sport","A secure fit and reliable sound for movement and active days.","79.00","EUR",3
+2d09c37d-e395-4b36-be0a-0ebc2d8c9257,"NOVA-WATCH-ONE","NOVA Watch One","A clean smartwatch interface for activity, time and notifications.","129.00","EUR",30
+76f582f4-ebe2-40c8-8f67-6d65436cdb4b,"NOVA-WATCH-PRO","NOVA Watch Pro","A more advanced everyday watch with a bright, crisp display.","199.00","EUR",15
+80ddc470-4ba1-434f-a76d-8bdb030b26c9,"NOVA-WATCH-LITE","NOVA Watch Lite","The essentials in a slim, lightweight smartwatch.","79.00","EUR",0
+c2ddc044-45c7-4123-be71-156717ea87d4,"NOVA-WATCH-ACTIVE","NOVA Watch Active","Activity tracking and practical daily features in a durable form.","149.00","EUR",22

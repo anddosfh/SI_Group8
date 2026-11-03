@@ -1,7 +1,7 @@
 import { Search, ShoppingBag, UserRound, X, Menu } from "lucide-react";
 import { useState } from "react";
-const categories = ["All Products", "Phones", "Headphones", "Buds", "Watches"];
-export default function Header({ category, setCategory, query, setQuery, cartCount, onCart, onAccount, user, onLogout }) {
+const defaultCategories = ["All Products", "Phones", "Headphones", "Buds", "Watches"];
+export default function Header({ categories = defaultCategories, category, setCategory, query, setQuery, cartCount, onCart, onAccount, user, onLogout }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   return <header className="site-header">
     <div className="topline"><span>TECHNOLOGY, CONSIDERED.</span><span>DESIGNED FOR EVERY DAY · EU SHIPPING</span></div>

@@ -10,6 +10,8 @@ import AdminModal from "./pages/AdminModal";
 import { StoreProvider, useStore } from "./context/StoreContext";
 import { api, clearSession, getSavedUser, getToken, setSession } from "./services/api";
 
+const baseCategories = ["Phones","Headphones","Buds","Watches"];
+
 function StoreApp() {
   const store = useStore();
   const [products,setProducts] = useState([]);
@@ -23,6 +25,8 @@ function StoreApp() {
   async function loadProducts(){try{const r=await api("/products");setProducts(r.products||[]);setLoadError("");}catch(e){setLoadError(e.message);}}
   useEffect(()=>{loadProducts();},[]);
   const filtered = useMemo(()=>products.filter(p=>(category==="All Products"||p.category===category)&&`${p.name} ${p.description} ${p.category}`.toLowerCase().includes(query.toLowerCase())),[products,category,query]);
+  // The four shop categories always show; others (e.g. "Other" for ERP products without a category) only when used.
+  const categories = useMemo(()=>["All Products",...baseCategories,...[...new Set(products.map(p=>p.category))].filter(c=>!baseCategories.includes(c)).sort()],[products]);
   const add = p => {store.addToCart(p);setNotice(`${p.name} added to your bag`);setTimeout(()=>setNotice(""),2400);};
   const logout = () => {clearSession();setUser(null);setNotice("You have signed out.");setTimeout(()=>setNotice(""),2200);};
   async function placeOrder(address){
@@ -35,7 +39,7 @@ function StoreApp() {
     try{const me=await api("/auth/me");setSession(getToken(),me.user);setUser(me.user);}catch{}
   }
   return <div className="app-shell">
-    <Header category={category} setCategory={setCategory} query={query} setQuery={setQuery} cartCount={store.cart.reduce((n,i)=>n+i.quantity,0)} onCart={()=>setModal("cart")} onAccount={()=>setModal("account")} user={user} onLogout={logout}/>
+    <Header categories={categories} category={category} setCategory={setCategory} query={query} setQuery={setQuery} cartCount={store.cart.reduce((n,i)=>n+i.quantity,0)} onCart={()=>setModal("cart")} onAccount={()=>setModal("account")} user={user} onLogout={logout}/>
     <main>
       <section className="hero">
         <div className="hero-copy"><p className="eyebrow"><span className="eyebrow-dot"/> THE NOVA COLLECTION · 2026</p><h1>Better tech.<br/><span>Less noise.</span></h1><p className="hero-description">Thoughtful technology for the way you live, work and move. Nothing unnecessary. Just the essentials, reimagined.</p><div className="hero-actions"><button className="button button-dark" onClick={()=>document.getElementById("catalogue").scrollIntoView({behavior:"smooth"})}>Explore the collection <ArrowRight size={17}/></button><span className="hero-count">01 — {products.length} PRODUCTS</span></div><div className="hero-footnote"><span>DESIGNED WITH INTENTION</span><span>BUILT FOR EVERY DAY</span></div></div>
@@ -44,7 +48,7 @@ function StoreApp() {
       <section className="benefits-strip"><div><Truck/><span><strong>Delivery across Europe</strong><small>Tracked, reliable shipping</small></span></div><div><ShieldCheck/><span><strong>Two-year warranty</strong><small>Confidence in every product</small></span></div><div><Headphones/><span><strong>Here when you need us</strong><small>Customer support that listens</small></span></div></section>
       <section className="catalogue-section" id="catalogue">
         <div className="section-heading"><div><p className="eyebrow">THE COLLECTION</p><h2>{category === "All Products" ? "Everyday, upgraded." : `${category}, reimagined.`}</h2><p className="section-description">A considered collection of connected essentials.</p></div><div className="catalogue-meta"><span>{filtered.length.toString().padStart(2,"0")} PRODUCTS</span><span>EUROPE · EUR</span></div></div>
-        <div className="filter-row">{["All Products","Phones","Headphones","Buds","Watches"].map(c=><button key={c} onClick={()=>setCategory(c)} className={category===c?"filter-chip selected":"filter-chip"}>{c}{c==="All Products"&&<span>{products.length}</span>}</button>)}</div>
+        <div className="filter-row">{categories.map(c=><button key={c} onClick={()=>setCategory(c)} className={category===c?"filter-chip selected":"filter-chip"}>{c}{c==="All Products"&&<span>{products.length}</span>}</button>)}</div>
         {loadError && <div className="error-banner"><strong>Can't reach the catalogue API.</strong><span>{loadError}. Start the server in the server folder.</span></div>}
         {filtered.length ? <div className="product-grid">{filtered.map(p=><ProductCard key={p.id} product={p} onAdd={add} onDetails={setSelected}/>)}</div> : <div className="empty-catalogue"><h3>No products found</h3><p>Try another category or search term.</p><button className="button button-outline" onClick={()=>{setCategory("All Products");setQuery("");}}>Show all products</button></div>}
         <div className="catalogue-bottom"><span>SHOWING {filtered.length} OF {products.length} OBJECTS</span><button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}>BACK TO TOP <ArrowDown size={15} className="up-arrow"/></button></div>

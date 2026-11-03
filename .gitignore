@@ -1,6 +1,9 @@
 node_modules/
 dist/
 
+# Lab 2 transfer folders (inbox/archive/error with ERP export files); created by the server at runtime.
+server/data/
+
 # server/.env holds the database password (e.g. the shared Neon connection string); never commit it.
 .env
 .env.*

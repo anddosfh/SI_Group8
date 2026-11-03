@@ -65,6 +65,49 @@ export async function getAdminAnalytics() {
       LEFT JOIN orders o ON o.id = i.order_id
       GROUP BY p.category
       ORDER BY revenue DESC
+    `),
+
+    // Top five products of completed orders.
+    query(`
+      SELECT p.id, p.name,
+        SUM(i.quantity)::int AS units_sold,
+        SUM(i.quantity * i.unit_price) AS revenue
+      FROM order_items i
+      JOIN orders o ON o.id = i.order_id AND o.status = 'completed'
+      JOIN products p ON p.id = i.product_id
+      GROUP BY p.id, p.name
+      ORDER BY revenue DESC, units_sold DESC
+      LIMIT 5
+    `),
+
+    query(`
+      SELECT id, customer_name AS "customerName", created_at AS "createdAt", status, total
+      FROM orders
+      ORDER BY id DESC
+      LIMIT 8
+    `),
+
+    // Stock is only tracked for ERP products; products created in the shop have none.
+    query(`
+      SELECT
+        COUNT(*) FILTER (WHERE active)::int AS active_products,
+        COUNT(*) FILTER (WHERE NOT active)::int AS inactive_products,
+        COUNT(*) FILTER (WHERE active AND erp_product_id IS NOT NULL AND stock = 0)::int AS out_of_stock,
+        COUNT(*) FILTER (WHERE active AND erp_product_id IS NOT NULL AND stock BETWEEN 1 AND 5)::int AS low_stock
+      FROM products
+    `),
+
+    query(`
+      SELECT
+        COUNT(*)::int AS total_customers,
+        COUNT(*) FILTER (WHERE order_count > 1)::int AS repeat_customers
+      FROM (
+        SELECT u.id, COUNT(o.id) AS order_count
+        FROM users u
+        LEFT JOIN orders o ON o.user_id = u.id
+        WHERE u.role = 'customer'
+        GROUP BY u.id
+      ) AS customer_orders
     `)
   ]);
 
