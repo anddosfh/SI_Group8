@@ -10,57 +10,73 @@ A full-stack electronics storefront inspired by minimalist product-led design. U
 - All Products: 16 total
 
 ## Requirements
-- Node.js 20+ recommended
-- npm
-- A PostgreSQL database: the group's shared [Neon](https://neon.tech) project, or PostgreSQL 13+ installed locally (tested with PostgreSQL 18)
+- Node.js 20+ (LTS) with npm, and Git
+- Access to this GitHub repository and to the group's [Neon](https://neon.tech) project (ask for an invitation), or PostgreSQL 13+ installed locally (tested with PostgreSQL 18)
+- For Lab 2: the course repository `systems-integration`, which contains the Mini-ERP
 - No native C++ build tools required; the `pg` driver is pure JavaScript.
 
-## Run locally
+## Setup for group members
 
-The API connects to the database in `DATABASE_URL` from `server/.env` (copy `server/.env.example`). Tables, the demo catalogue and the demo admin are created automatically on the first API start against an empty database; later starts reuse what is there. The startup message names the database host, so you can check which database you are on.
+The commands are for PowerShell on Windows. Clone this repository and the course repository into the same folder (e.g. `C:\Users\<you>`) and run every command from there, so the relative paths below work. Use `npm.cmd` and `npx.cmd`: PowerShell's execution policy can block plain `npm`.
 
-### Option A — shared Neon database (group work)
-One group member sets it up:
-1. Create a free project at https://neon.tech (pick a region close to you, e.g. AWS Europe Central / Frankfurt).
-2. In the project dashboard, open **Connect** and copy the connection string (the pooled one, host ending in `-pooler…neon.tech`).
-3. Share that string with the group privately (it contains the database password), or invite the members to the Neon project.
-
-Every group member, on their own machine:
-1. Copy `server/.env.example` to `server/.env`.
-2. Set `DATABASE_URL` to the Neon string. Replace its ending `sslmode=require&channel_binding=require` with `sslmode=verify-full`; it connects either way, but `pg` prints an SSL warning on every start otherwise.
-3. Start the API as below.
-
-`server/.env` is listed in `.gitignore`; never commit it or paste the string into the repository.
-
-### Option B — local PostgreSQL
-Create the `nova` login role and the empty `nova_gadgets` database once; `psql` asks for the password of your PostgreSQL superuser `postgres`. The default `DATABASE_URL` in `.env.example` points to it.
+### 1. Get the code
 ```powershell
-cd "$HOME\Desktop\nova_si\server"
+git clone https://github.com/anddosfh/SI_Group8.git
+git clone https://codeberg.org/ceedee666/systems-integration.git
+```
+Skip the second clone if you already have the course repository. Later, `git pull` inside `SI_Group8` fetches the group's changes.
+
+### 2. Database connection in `server/.env`
+```powershell
+Copy-Item SI_Group8\server\.env.example SI_Group8\server\.env
+```
+Then open `SI_Group8/server/.env` and pick one option. `DATABASE_URL` must appear only once without a leading `#`.
+
+**Option A — shared Neon database (group work).** Put `#` in front of the local `DATABASE_URL` line and add the group's Neon connection string as `DATABASE_URL=...`. Copy it from the Neon console (**Connect**, the pooled string with a host ending in `-pooler…neon.tech`) after you were invited to the project, or get it privately from a group member. Replace its ending `sslmode=require&channel_binding=require` with `sslmode=verify-full`; it connects either way, but `pg` prints an SSL warning on every start otherwise.
+
+To create the Neon project in the first place (one group member, once): sign up at https://neon.tech, create a free project in a region close to you (e.g. AWS Europe Central / Frankfurt) and invite the others in the project settings.
+
+**Option B — local PostgreSQL.** Keep the default `DATABASE_URL`. Create its `nova` login role and the empty `nova_gadgets` database once; `psql` asks for the password of your PostgreSQL superuser `postgres`:
+```powershell
+cd SI_Group8\server
 npm.cmd run db:setup
 ```
 
-### Terminal 1 — API
+`server/.env` is listed in `.gitignore`; never commit it or paste the connection string into the repository or a chat. Leave `ERP_SYNC_INTERVAL_MINUTES=0` unless the group agreed that you run the periodic ERP export (see Lab 2 below). The API reads `.env` only at startup, so restart it after every change.
+
+### 3. Terminal 1 — API
 ```powershell
-cd "$HOME\Desktop\nova_si\server"
+cd SI_Group8\server
 npm.cmd install
 npm.cmd run dev
 ```
-API health: http://localhost:4000/api/health
+The startup message names the database host, so you can check which database you are on. The first start against an empty database creates the tables, the demo catalogue and the demo admin; later starts reuse what is there. Check: http://localhost:4000/api/health
 
-### Terminal 2 — frontend
+### 4. Terminal 2 — frontend
 ```powershell
-cd "$HOME\Desktop\nova_si\client"
+cd SI_Group8\client
 npm.cmd install
 npm.cmd run dev
 ```
-Open the Vite URL shown in the terminal (usually http://localhost:5173).
+Open http://localhost:5173 and sign in with the [demo admin](#demo-admin) to reach the admin dashboard.
 
-## Merge into the existing `nova_si` project
-1. Back up the existing `nova_si` folder.
-2. Extract this ZIP somewhere temporary.
-3. Copy the `client` and `server` folders from this ZIP into your existing `nova_si` folder and allow replacement of old source files after backup.
-4. Keep your group's `docs` and `tests` files if they contain coursework material you need. The server's new tests folder is optional.
-5. Install dependencies in both folders using the commands above.
+### 5. Terminal 3 — Mini-ERP (Lab 2)
+```powershell
+Copy-Item SI_Group8\erp\test-data\de.fhaachen.simpleerp-Products.csv systems-integration\src\simple-erp\test\data\ -Force
+cd systems-integration\src\simple-erp
+npm.cmd install
+npx.cmd cds watch
+```
+The copied file adds the 16 NOVA products to the ERP's test data ([erp/README.md](erp/README.md)). Check http://localhost:4004/rest/api/getProducts (sign in as `service-user` / `service-user`): the CSV lists 18 products. Then use **Pull from ERP now** in the shop's admin dashboard.
+
+### Troubleshooting
+| Problem | Fix |
+|---|---|
+| `npm` is not recognized in the VS Code terminal | Restart VS Code after installing Node.js. With a portable VS Code, append `;${env:PATH}` to `PATH` in the setting `terminal.integrated.env.windows`. |
+| `EADDRINUSE` for port 4000, 5173 or 4004 | The program already runs in another terminal; stop it there with Ctrl+C. |
+| The API cannot reach the database | Check `DATABASE_URL` in `server/.env` (only one active line), then restart the API. |
+| **Pull from ERP now** reports the ERP as not reachable | Start the Mini-ERP (step 5) and keep its terminal open. |
+| **Pull from ERP now** is rejected with "Safety stop" | The ERP runs without the NOVA products: copy the file again (step 5) and restart `cds watch`. |
 
 ## Lab 2 — product transfer from the Mini-ERP
 
