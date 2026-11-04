@@ -75,7 +75,6 @@ export default function AdminModal({ onClose, onChanged }) {
   const [analyticsError, setAnalyticsError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [imports, setImports] = useState([]);
-  const [transfer, setTransfer] = useState(null);
   const [fullSync, setFullSync] = useState(true);
 
   async function load() {
@@ -105,7 +104,6 @@ export default function AdminModal({ onClose, onChanged }) {
   async function loadImports() {
     const data = await api("/products/imports");
     setImports(data.imports || []);
-    setTransfer(data.transfer || null);
   }
 
   async function refreshAll() {
@@ -526,25 +524,6 @@ export default function AdminModal({ onClose, onChanged }) {
       <h3 className="section-mini-title">ERP product import</h3>
 
       <div className="erp-import">
-        <p className="fine-print">
-          Product data comes from the Mini-ERP's CSV export. New products are added,
-          prices and stock of existing ones updated. Files are imported completely or not at all.
-        </p>
-
-        {transfer && (
-          <p className="fine-print">
-            ERP export: {transfer.erpExportUrl} (
-            {transfer.syncIntervalMinutes > 0
-              ? `every ${transfer.syncIntervalMinutes} min`
-              : "on demand"}
-            ) · Inbox: {transfer.inboxFolder} (
-            {transfer.inboxPollSeconds > 0
-              ? `checked every ${transfer.inboxPollSeconds} s`
-              : "checked on demand"}
-            ) · File names: {transfer.fileNamePattern}
-          </p>
-        )}
-
         <div className="erp-import-actions">
           <button
             type="button"
