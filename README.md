@@ -1,4 +1,4 @@
-# NOVA Gadgets — System Integration Labs 1 & 2
+# NOVA Gadgets — System Integration Labs 1–3
 
 A full-stack electronics storefront inspired by minimalist product-led design. Uses an existing-style `client/` and `server/` structure.
 
@@ -60,7 +60,7 @@ npm.cmd run dev
 ```
 Open http://localhost:5173 and sign in with the [demo admin](#demo-admin) to reach the admin dashboard.
 
-### 5. Terminal 3 — Mini-ERP (Lab 2)
+### 5. Terminal 3 — Mini-ERP (Labs 2 and 3)
 ```powershell
 Copy-Item SI_Group8\erp\test-data\de.fhaachen.simpleerp-Products.csv systems-integration\src\simple-erp\test\data\ -Force
 cd systems-integration\src\simple-erp
@@ -75,7 +75,7 @@ The copied file adds the 16 NOVA products to the ERP's test data ([erp/README.md
 | `npm` is not recognized in the VS Code terminal | Restart VS Code after installing Node.js. With a portable VS Code, append `;${env:PATH}` to `PATH` in the setting `terminal.integrated.env.windows`. |
 | `EADDRINUSE` for port 4000, 5173 or 4004 | The program already runs in another terminal; stop it there with Ctrl+C. |
 | The API cannot reach the database | Check `DATABASE_URL` in `server/.env` (only one active line), then restart the API. |
-| **Pull from ERP now** reports the ERP as not reachable | Start the Mini-ERP (step 5) and keep its terminal open. |
+| **Pull from ERP now** reports the ERP as not reachable, or the shop says "Live stock is unavailable" | Start the Mini-ERP (step 5) and keep its terminal open. Since Lab 3 the ERP must run for stock, checkout and orders. |
 | **Pull from ERP now** is rejected with "Safety stop" | The ERP runs without the NOVA products: copy the file again (step 5) and restart `cds watch`. |
 
 ## Lab 2 — product transfer from the Mini-ERP
@@ -114,7 +114,28 @@ Mini-ERP ── GET /rest/api/getProducts (CSV) ──▶ server/data/erp-transf
 
 **Error handling:** a file is imported completely or not at all. Every problem is reported with its line number (missing columns, missing or invalid price/stock, unsupported currency, duplicate product IDs, empty or oversized file, unclosed quotes). The ERP's export does not quote values, so commas inside a description split it into extra columns; the importer joins them back. A complete export that would deactivate more than half of the ERP products at once is rejected as a safety stop (typically an ERP that has not loaded its data yet). If the ERP is unreachable or rejects the login, the attempt is logged and the next interval tries again. Every run is listed under **Import history** in the admin dashboard (table `product_imports`).
 
-**Consistency and limits:** the ERP is the source of truth for price and stock; products are matched only by `productID`, so importing the same file twice changes nothing. Shop orders reduce the shop's stock but do not reach the ERP yet (Lab 3), so the next import resets the stock to the ERP's figure. File transfer is simple and decoupled, but the shop is only as current as the last file.
+**Consistency and limits:** products are matched only by `productID`, so importing the same file twice changes nothing. Since Lab 3 the import keeps master data (new products, names, descriptions, prices) in sync but no longer stores stock: availability is asked live from the ERP. File transfer is simple and decoupled, but the shop is only as current as the last file.
+
+## Lab 3 — stock and purchase orders live from the ERP (RPC)
+The Mini-ERP is the single source of truth for stock and purchase orders. The shop server calls it synchronously (`server/src/services/erpClient.js`); the browser only talks to the shop API, so the ERP credentials stay on the server.
+
+| Shop feature | ERP call |
+|---|---|
+| Catalogue, product view, checkout: live stock and price | `GET /rest/api/products` (no cache) |
+| Find the customer for an order (by email) | `GET /rest/api/customers` |
+| Create the customer / update the address | OData `POST`/`PATCH /odata/v4/simple-erp/Customers` (the REST API has no call for it) |
+| Place the order | `POST /rest/api/createOrder`, then `GET /rest/api/orders` for the order number (createOrder answers 204 without one) |
+| Order history, admin order list, analytics, purchase history | `GET /rest/api/orders` |
+| Admin status buttons (Pick, Ship, Complete, Cancel) | OData actions `pickOrder`, `shipOrder`, `completeOrder`, `cancelOrder` |
+| Admin "Add product" | OData `POST /odata/v4/simple-erp/Products` with the initial stock |
+
+**Errors and retries:** reads are tried up to 3 times (timeout 3 s, backoff 200 ms, 400 ms; `ERP_TIMEOUT_MS`, `ERP_RETRIES`). ERP answers 409/422 (e.g. too little stock) are shown to the customer and never retried. `createOrder` is not idempotent, so it is re-sent only when the connection was refused; after a timeout the shop looks for the order instead of sending it again, and otherwise asks the customer to check the order history. A user can run only one checkout at a time.
+
+**When the ERP is down:** the catalogue still loads with "Availability unknown" and a banner, buying is disabled, checkout, order history and analytics answer with "The ERP is not reachable right now", and sign-in keeps working (the purchase history is then empty). The ERP keeps its data in memory: after a restart its orders and customers are gone, and the shop creates the customer again on the next checkout.
+
+**Known ERP bug:** **Cancel** always fails with "Cannot cancel an order that is not in new state.", also when the ERP is called directly. `updateOrderStatus` in the ERP's `srv/simpleerp.js` compares the result object of `SELECT.one` with the string `"NEW"`. The shop shows the ERP's message; the fix belongs in the course's ERP.
+
+**Database:** the `stock` column and the `orders`/`order_items` tables are no longer read or written; they stay in the shared database as the archive of the orders placed before Lab 3. Products that exist only in the shop (no ERP product ID) are shown as "Not available".
 
 ## Product images
 The demo products use SVG illustrations from `client/public/products/`; Vite serves that folder at `/products/…`, and each product's `image` column stores that path (e.g. `/products/nova-phone-one.svg`). To use another image, put the file into that folder, commit it so the whole group has it, and enter `/products/<file name>` as the image URL in the admin dashboard. Full `https://` image URLs work as well.
@@ -126,4 +147,4 @@ Password: `NovaAdmin123!`
 The demo admin is created on first backend startup. Change the demo credentials and `JWT_SECRET` before any public deployment.
 
 ## Storage and limitations
-The API stores users, products, orders and order items in PostgreSQL. The schema is in `server/src/database/schema.sql`; `server/src/database/db.js` applies it on every start and seeds the demo data into an empty database. Checkout runs in a single transaction and copies product names and prices into `order_items`, so later catalogue changes do not alter past orders. Change the `nova` role's password in `setup.sql` and `DATABASE_URL` before any shared or public deployment. `npm test` runs against the database in `DATABASE_URL`; on the shared Neon database its catalogue check fails once someone has added or removed products. Checkout creates an order but does not process real payments. This is a coursework prototype, not production commerce software.
+The API stores users, products and the import history in PostgreSQL; since Lab 3 stock and orders live in the Mini-ERP. The schema is in `server/src/database/schema.sql`; `server/src/database/db.js` applies it on every start and seeds the demo data into an empty database. The ERP unit tests (`erpClient`, `erpMapping`, `productStock`, `checkout`, `analytics`) use a stub ERP and no database: `node --test tests/erpClient.test.js tests/erpMapping.test.js tests/productStock.test.js tests/checkout.test.js tests/analytics.test.js`. Change the `nova` role's password in `setup.sql` and `DATABASE_URL` before any shared or public deployment. `npm test` runs against the database in `DATABASE_URL`; on the shared Neon database its catalogue check fails once someone has added or removed products. Checkout creates an order but does not process real payments. This is a coursework prototype, not production commerce software.
