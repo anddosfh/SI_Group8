@@ -1,8 +1,15 @@
 import { ArrowUpRight, Plus } from "lucide-react";
 
+// Lab 3: availability comes live from the ERP with every catalogue load.
+export const availabilityLabel = {
+  in_stock: "In stock",
+  out_of_stock: "Out of stock",
+  unknown: "Availability unknown",
+  not_sold: "Not available"
+};
+
 export default function ProductCard({ product, onAdd, onDetails }) {
-  const isErpProduct = Boolean(product.erp_product_id);
-  const outOfStock = isErpProduct && Number(product.stock) <= 0;
+  const canBuy = product.availability === "in_stock";
 
   return (
     <article className="product-card">
@@ -36,13 +43,9 @@ export default function ProductCard({ product, onAdd, onDetails }) {
           <h3>{product.name}</h3>
           <p className="product-description">{product.description}</p>
 
-          {isErpProduct && (
-            <p className="product-description">
-              {outOfStock
-                ? "Currently out of stock"
-                : `${product.stock} available`}
-            </p>
-          )}
+          <p className={`availability availability-${product.availability}`}>
+            {availabilityLabel[product.availability] || availabilityLabel.unknown}
+          </p>
         </div>
 
         <div className="product-buy">
@@ -51,11 +54,11 @@ export default function ProductCard({ product, onAdd, onDetails }) {
           <button
             className="add-button"
             onClick={() => onAdd(product)}
-            disabled={outOfStock}
+            disabled={!canBuy}
             aria-label={
-              outOfStock
-                ? `${product.name} is out of stock`
-                : `Add ${product.name} to bag`
+              canBuy
+                ? `Add ${product.name} to bag`
+                : `${product.name}: ${availabilityLabel[product.availability] || availabilityLabel.unknown}`
             }
           >
             <Plus size={18} />

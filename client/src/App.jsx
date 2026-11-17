@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowRight, Check, ShieldCheck, Truck, Headphones } from "lucide-react";
 import Header from "./components/Header";
-import ProductCard from "./components/ProductCard";
+import ProductCard, { availabilityLabel } from "./components/ProductCard";
 import AccountModal from "./pages/AccountModal";
 import CartModal from "./pages/CartModal";
 import CheckoutModal from "./pages/CheckoutModal";
@@ -22,7 +22,12 @@ function StoreApp() {
   const [selected,setSelected] = useState(null);
   const [notice,setNotice] = useState("");
   const [loadError,setLoadError] = useState("");
-  async function loadProducts(){try{const r=await api("/products");setProducts(r.products||[]);setLoadError("");}catch(e){setLoadError(e.message);}}
+  // Lab 3: false when the shop could not reach the ERP for live stock; null until the first load.
+  const [erpAvailable,setErpAvailable] = useState(null);
+  const [detailStock,setDetailStock] = useState(null);
+  async function loadProducts(){try{const r=await api("/products");setProducts(r.products||[]);setErpAvailable(r.erpAvailable!==false);setLoadError("");store.syncCart(r.products||[]);}catch(e){setLoadError(e.message);}}
+  // Lab 3: opening a product asks the ERP for its current stock.
+  useEffect(()=>{if(!selected)return;let current=true;setDetailStock({loading:true});api(`/products/${selected.id}/stock`).then(r=>{if(current)setDetailStock(r);}).catch(e=>{if(current)setDetailStock({availability:"unknown",error:e.message});});return()=>{current=false;};},[selected]);
   useEffect(()=>{loadProducts();},[]);
   const filtered = useMemo(()=>products.filter(p=>(category==="All Products"||p.category===category)&&`${p.name} ${p.description} ${p.category}`.toLowerCase().includes(query.toLowerCase())),[products,category,query]);
   // The four shop categories always show; others (e.g. "Other" for ERP products without a category) only when used.
@@ -32,8 +37,12 @@ function StoreApp() {
   async function placeOrder(address){
     if(!user){setModal("account");throw new Error("Please sign in before placing an order.");}
     if(!store.cart.length)throw new Error("Your bag is empty.");
-    const result=await api("/orders",{method:"POST",body:JSON.stringify({items:store.cart.map(i=>({productId:i.id,quantity:i.quantity})),address})});
-    store.clearCart();setModal("");setNotice(`Order #${result.order.id} placed successfully`);setTimeout(()=>setNotice(""),4000);
+    // Lab 3: the shown unit price travels along, so the server can refuse when the ERP price has changed meanwhile.
+    let result;
+    try{result=await api("/orders",{method:"POST",body:JSON.stringify({items:store.cart.map(i=>({productId:i.id,quantity:i.quantity,unitPrice:i.price})),address})});}
+    catch(e){if(e.status===409)await loadProducts();throw e;}
+    store.clearCart();setModal("");setNotice(`Order #${result.order.id} confirmed by the ERP`);setTimeout(()=>setNotice(""),4000);
+    loadProducts();
     // The server saves the delivery address and purchase history with the order; reload the account so the UI shows them.
     // The order already succeeded, so a failed reload only leaves the old account data on screen.
     try{const me=await api("/auth/me");setSession(getToken(),me.user);setUser(me.user);}catch{}
@@ -49,6 +58,7 @@ function StoreApp() {
       <section className="catalogue-section" id="catalogue">
         <div className="section-heading"><div><p className="eyebrow">THE COLLECTION</p><h2>{category === "All Products" ? "Everyday, upgraded." : `${category}, reimagined.`}</h2><p className="section-description">A considered collection of connected essentials.</p></div><div className="catalogue-meta"><span>{filtered.length.toString().padStart(2,"0")} PRODUCTS</span><span>EUROPE · EUR</span></div></div>
         <div className="filter-row">{categories.map(c=><button key={c} onClick={()=>setCategory(c)} className={category===c?"filter-chip selected":"filter-chip"}>{c}{c==="All Products"&&<span>{products.length}</span>}</button>)}</div>
+        {erpAvailable===false && !loadError && <div className="error-banner"><strong>Live stock is unavailable right now.</strong><span>The ERP cannot be reached. You can browse, but ordering is paused until it is back.</span></div>}
         {loadError && <div className="error-banner"><strong>Can't reach the catalogue API.</strong><span>{loadError}. Start the server in the server folder.</span></div>}
         {filtered.length ? <div className="product-grid">{filtered.map(p=><ProductCard key={p.id} product={p} onAdd={add} onDetails={setSelected}/>)}</div> : <div className="empty-catalogue"><h3>No products found</h3><p>Try another category or search term.</p><button className="button button-outline" onClick={()=>{setCategory("All Products");setQuery("");}}>Show all products</button></div>}
         <div className="catalogue-bottom"><span>SHOWING {filtered.length} OF {products.length} OBJECTS</span><button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}>BACK TO TOP <ArrowDown size={15} className="up-arrow"/></button></div>
@@ -63,7 +73,7 @@ function StoreApp() {
     {modal==="checkout"&&<CheckoutModal onClose={()=>setModal("")} total={store.total} user={user} onPlaceOrder={placeOrder}/>}
     {modal==="orders"&&<OrdersModal onClose={()=>setModal("")} user={user}/>}
     {modal==="admin"&&<AdminModal onClose={()=>setModal("")} onChanged={loadProducts}/>}
-    {selected&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setSelected(null);}}><section className="modal modal-wide product-detail"><button className="detail-close icon-button" onClick={()=>setSelected(null)}>×</button><img src={selected.image} alt={selected.name} onError={e=>e.currentTarget.src="https://placehold.co/600x500/f0f0ec/222?text=NOVA"}/><div><p className="product-category">{selected.category}</p><h2>{selected.name}</h2><p>{selected.description}</p><strong className="detail-price">€{Number(selected.price).toFixed(2)}</strong><button className="button button-dark button-full" onClick={()=>{add(selected);setSelected(null);}}>Add to bag <ArrowRight size={17}/></button><p className="fine-print">Designed for everyday use. Demo product information.</p></div></section></div>}
+    {selected&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setSelected(null);}}><section className="modal modal-wide product-detail"><button className="detail-close icon-button" onClick={()=>setSelected(null)}>×</button><img src={selected.image} alt={selected.name} onError={e=>e.currentTarget.src="https://placehold.co/600x500/f0f0ec/222?text=NOVA"}/><div><p className="product-category">{selected.category}</p><h2>{selected.name}</h2><p>{selected.description}</p><strong className="detail-price">€{Number(detailStock?.price??selected.price).toFixed(2)}</strong><p className={`availability availability-${detailStock?.availability||"unknown"}`}>{!detailStock||detailStock.loading?"Checking stock with the ERP…":availabilityLabel[detailStock.availability]||availabilityLabel.unknown}{detailStock?.error&&<small> {detailStock.error}</small>}</p><button className="button button-dark button-full" disabled={detailStock?.availability!=="in_stock"} onClick={()=>{add({...selected,...(detailStock?.price!=null?{price:detailStock.price}:{}),stock:detailStock.stock,availability:detailStock.availability});setSelected(null);}}>Add to bag <ArrowRight size={17}/></button><p className="fine-print">Designed for everyday use. Demo product information.</p></div></section></div>}
   </div>;
 }
 export default function App(){return <StoreProvider><StoreApp/></StoreProvider>;}

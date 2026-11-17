@@ -2,13 +2,24 @@
 import { useEffect, useState } from "react";
 import { api } from "../services/api";
 import Modal from "../components/Modal";
+import { availabilityLabel } from "../components/ProductCard";
 
 const blank = {
   name: "",
   description: "",
   price: "",
   category: "Phones",
-  image: ""
+  image: "",
+  // Lab 3: new products are created in the ERP, which owns their stock from then on.
+  initialStock: "0"
+};
+
+// Lab 3: each button triggers the ERP action that moves the order into that status.
+const statusActions = {
+  picked: "Pick",
+  shipped: "Ship",
+  completed: "Complete",
+  canceled: "Cancel"
 };
 
 const money = (value) =>
@@ -67,6 +78,7 @@ function ImportReport({ report }) {
 export default function AdminModal({ onClose, onChanged }) {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [ordersError, setOrdersError] = useState("");
   const [form, setForm] = useState(blank);
   const [message, setMessage] = useState("");
   const [importing, setImporting] = useState(false);
@@ -77,14 +89,16 @@ export default function AdminModal({ onClose, onChanged }) {
   const [imports, setImports] = useState([]);
   const [fullSync, setFullSync] = useState(true);
 
+  // Orders come from the ERP; when it is down the catalogue still loads and the orders show the error.
   async function load() {
     const [p, o] = await Promise.all([
       api("/products"),
-      api("/orders/admin")
+      api("/orders/admin").catch((error) => ({ error }))
     ]);
 
     setProducts(p.products || []);
     setOrders(o.orders || []);
+    setOrdersError(o.error ? o.error.message : "");
   }
 
   async function loadAnalytics() {
@@ -131,7 +145,8 @@ export default function AdminModal({ onClose, onChanged }) {
         method: "POST",
         body: JSON.stringify({
           ...form,
-          price: Number(form.price)
+          price: Number(form.price),
+          initialStock: Number(form.initialStock || 0)
         })
       });
 
@@ -646,6 +661,20 @@ export default function AdminModal({ onClose, onChanged }) {
           }
         />
 
+        <input
+          aria-label="Initial stock in ERP"
+          placeholder="Initial stock in ERP"
+          title="Initial stock in ERP (0–1000)"
+          type="number"
+          min="0"
+          max="1000"
+          step="1"
+          value={form.initialStock}
+          onChange={(e) =>
+            setForm({ ...form, initialStock: e.target.value })
+          }
+        />
+
         <button className="button button-dark" type="submit">
           Add product
         </button>
@@ -677,8 +706,8 @@ export default function AdminModal({ onClose, onChanged }) {
               <small>
                 {product.category} · {money(product.price)}
                 {product.erp_product_id
-                  ? ` · ERP ${product.erp_product_id} · Stock: ${product.stock}`
-                  : ""}
+                  ? ` · ERP ${product.erp_product_id} · ${availabilityLabel[product.availability] || availabilityLabel.unknown}${product.stock != null ? ` (${product.stock})` : ""}`
+                  : " · not in the ERP, cannot be ordered"}
               </small>
             </span>
 
@@ -698,8 +727,14 @@ export default function AdminModal({ onClose, onChanged }) {
         Orders ({orders.length})
       </h3>
 
+      <p className="fine-print">
+        Orders are stored in the ERP. Status changes run the ERP's own actions.
+      </p>
+
       <div className="admin-table">
-        {orders.length === 0 ? (
+        {ordersError ? (
+          <p className="form-error">{ordersError}</p>
+        ) : orders.length === 0 ? (
           <p className="fine-print">No orders placed yet.</p>
         ) : (
           orders.map((order) => (
@@ -711,21 +746,23 @@ export default function AdminModal({ onClose, onChanged }) {
                 </small>
               </span>
 
-              <select
-                value={order.status}
-                onChange={(e) =>
-                  status(order.id, e.target.value)
-                }
-                aria-label={`Status for order ${order.id}`}
-              >
-                {["pending", "shipped", "completed", "cancelled"].map(
-                  (orderStatus) => (
-                    <option key={orderStatus} value={orderStatus}>
-                      {orderStatus}
-                    </option>
-                  )
-                )}
-              </select>
+              <span className="admin-order-actions">
+                <span className={`status status-${order.status}`}>
+                  {order.status}
+                </span>
+
+                {(order.nextStatuses || []).map((nextStatus) => (
+                  <button
+                    key={nextStatus}
+                    className="button button-outline button-small"
+                    type="button"
+                    onClick={() => status(order.id, nextStatus)}
+                    aria-label={`${statusActions[nextStatus]} order ${order.id}`}
+                  >
+                    {statusActions[nextStatus]}
+                  </button>
+                ))}
+              </span>
             </div>
           ))
         )}
