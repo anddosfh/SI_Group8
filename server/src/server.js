@@ -4,6 +4,7 @@ import cors from "cors";
 import { DATABASE_URL, PORT } from "./config/env.js";
 import { initDatabase } from "./database/db.js";
 import { startErpTransfer } from "./services/erpTransferService.js";
+import { ErpUnavailableError } from "./utils/errors.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
@@ -55,6 +56,12 @@ app.use((err, req, res, next) => {
   }
   if (err.type === "entity.parse.failed") {
     return res.status(400).json({ error: "The request body is not valid JSON." });
+  }
+
+  // Lab 3: the ERP is down or unreachable. The shop keeps running; the client shows the message.
+  if (err instanceof ErpUnavailableError) {
+    console.warn("ERP unavailable:", err.message);
+    return res.status(503).json({ error: err.message });
   }
 
   console.error("Server error:", err);

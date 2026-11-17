@@ -9,6 +9,9 @@ export const DATABASE_URL = process.env.DATABASE_URL || "postgres://nova:nova_lo
 export const ERP_URL = process.env.ERP_URL || "http://localhost:4004";
 export const ERP_USER = process.env.ERP_USER || "service-user";
 export const ERP_PASSWORD = process.env.ERP_PASSWORD || "service-user";
+// Lab 3: live calls to the ERP. Timeout per attempt (ms) and attempts per read before the shop reports the ERP as unavailable.
+export const ERP_TIMEOUT_MS = Number(process.env.ERP_TIMEOUT_MS || 3000);
+export const ERP_RETRIES = Number(process.env.ERP_RETRIES || 3);
 // 0 = export from the ERP only on demand (admin dashboard). Enable it on one machine only when the group shares a database.
 export const ERP_SYNC_INTERVAL_MINUTES = Number(process.env.ERP_SYNC_INTERVAL_MINUTES || 0);
 // How often the inbox folder is checked for new files; 0 = only when an import is started from the dashboard.
