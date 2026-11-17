@@ -1,162 +1,86 @@
 import { query } from "../database/db.js";
+import { getErpCustomers, getErpOrders, getErpProducts } from "./erpClient.js";
 
-export async function getAdminAnalytics() {
-  const [
-    overviewResult,
-    monthlyResult,
-    statusResult,
-    categoryResult,
-    topProductsResult,
-    recentOrdersResult,
-    inventoryResult,
-    customerResult
-  ] = await Promise.all([
-    // Revenue counts completed orders only.
-    query(`
-      SELECT
-        COUNT(*)::int AS total_orders,
-        COUNT(*) FILTER (WHERE status = 'pending')::int AS pending_orders,
-        COUNT(*) FILTER (WHERE status = 'shipped')::int AS shipped_orders,
-        COUNT(*) FILTER (WHERE status = 'completed')::int AS completed_orders,
-        COUNT(*) FILTER (WHERE status = 'cancelled')::int AS cancelled_orders,
-        COALESCE(SUM(total) FILTER (WHERE status = 'completed'), 0) AS revenue,
-        COALESCE(AVG(total) FILTER (WHERE status = 'completed'), 0) AS average_order_value
-      FROM orders
-    `),
+// Lab 3: orders and stock live in the ERP, so the dashboard figures are computed from ERP data.
+// The response shape is the one the dashboard has used since Lab 1. Revenue counts completed orders only.
+const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const round2 = value => Math.round(value * 100) / 100;
 
-    // Six-month revenue trend.
-    query(`
-      SELECT
-        TO_CHAR(month_start, 'Mon YY') AS month,
-        COALESCE(SUM(o.total) FILTER (WHERE o.status = 'completed'), 0) AS revenue,
-        COUNT(o.id)::int AS orders
-      FROM generate_series(
-        date_trunc('month', CURRENT_DATE) - INTERVAL '5 months',
-        date_trunc('month', CURRENT_DATE),
-        INTERVAL '1 month'
-      ) AS month_start
-      LEFT JOIN orders o
-        ON o.created_at >= month_start
-       AND o.created_at < month_start + INTERVAL '1 month'
-      GROUP BY month_start
-      ORDER BY month_start
-    `),
+export function buildAnalytics({erpOrders, erpProducts, erpCustomers, shopProducts, shopCustomerCount, today = new Date()}) {
+  const count = status => erpOrders.filter(o => o.status === status).length;
+  const completed = erpOrders.filter(o => o.status === "completed");
+  const revenue = round2(completed.reduce((sum, o) => sum + o.orderAmount, 0));
 
-    query(`
-      SELECT status, COUNT(*)::int AS count
-      FROM orders
-      GROUP BY status
-      ORDER BY status
-    `),
+  // Six-month trend by order date (YYYY-MM-DD), oldest month first.
+  const monthly = [];
+  for (let back = 5; back >= 0; back--) {
+    const start = new Date(today.getFullYear(), today.getMonth() - back, 1);
+    const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`;
+    const inMonth = erpOrders.filter(o => String(o.orderDate).startsWith(key));
+    monthly.push({month: `${months[start.getMonth()]} ${String(start.getFullYear()).slice(2)}`,
+      revenue: round2(inMonth.filter(o => o.status === "completed").reduce((sum, o) => sum + o.orderAmount, 0)), orders: inMonth.length});
+  }
 
-    
-    // Category performance based on completed order items.
-    query(`
-      SELECT
-        p.category,
-        COALESCE(SUM(i.quantity) FILTER (
-          WHERE o.status = 'completed'
-        ), 0)::int AS units_sold,
-        COALESCE(SUM(i.quantity * i.unit_price) FILTER (
-          WHERE o.status = 'completed'
-        ), 0) AS revenue
-      FROM products p
-      LEFT JOIN order_items i ON i.product_id = p.id
-      LEFT JOIN orders o ON o.id = i.order_id
-      GROUP BY p.category
-      ORDER BY revenue DESC
-    `),
+  // ERP product (UUID) -> shop product, to get the shop's id, name and category.
+  const shopByErpId = new Map(shopProducts.filter(p => p.erp_product_id).map(p => [p.erp_product_id, p]));
+  const productByUuid = new Map(erpProducts.map(p => [p.uuid, {erp: p, shop: shopByErpId.get(p.productId)}]));
+  const categories = new Map([...new Set(shopProducts.map(p => p.category))].map(c => [c, {category: c, unitsSold: 0, revenue: 0}]));
+  const sold = new Map();
+  for (const order of completed) {
+    for (const item of order.items) {
+      const product = productByUuid.get(item.productUuid);
+      const category = product?.shop?.category || "Other";
+      if (!categories.has(category)) categories.set(category, {category, unitsSold: 0, revenue: 0});
+      const c = categories.get(category);
+      c.unitsSold += item.quantity; c.revenue = round2(c.revenue + item.itemAmount);
+      const key = product?.shop?.id ?? product?.erp.productId ?? item.productUuid;
+      const s = sold.get(key) || {id: key, name: product?.shop?.name || product?.erp.name || "Unknown product", units_sold: 0, revenue: 0};
+      s.units_sold += item.quantity; s.revenue = round2(s.revenue + item.itemAmount);
+      sold.set(key, s);
+    }
+  }
 
-    // Top five products of completed orders.
-    query(`
-      SELECT p.id, p.name,
-        SUM(i.quantity)::int AS units_sold,
-        SUM(i.quantity * i.unit_price) AS revenue
-      FROM order_items i
-      JOIN orders o ON o.id = i.order_id AND o.status = 'completed'
-      JOIN products p ON p.id = i.product_id
-      GROUP BY p.id, p.name
-      ORDER BY revenue DESC, units_sold DESC
-      LIMIT 5
-    `),
-
-    query(`
-      SELECT id, customer_name AS "customerName", created_at AS "createdAt", status, total
-      FROM orders
-      ORDER BY id DESC
-      LIMIT 8
-    `),
-
-    // Stock is only tracked for ERP products; products created in the shop have none.
-    query(`
-      SELECT
-        COUNT(*) FILTER (WHERE active)::int AS active_products,
-        COUNT(*) FILTER (WHERE NOT active)::int AS inactive_products,
-        COUNT(*) FILTER (WHERE active AND erp_product_id IS NOT NULL AND stock = 0)::int AS out_of_stock,
-        COUNT(*) FILTER (WHERE active AND erp_product_id IS NOT NULL AND stock BETWEEN 1 AND 5)::int AS low_stock
-      FROM products
-    `),
-
-    query(`
-      SELECT
-        COUNT(*)::int AS total_customers,
-        COUNT(*) FILTER (WHERE order_count > 1)::int AS repeat_customers
-      FROM (
-        SELECT u.id, COUNT(o.id) AS order_count
-        FROM users u
-        LEFT JOIN orders o ON o.user_id = u.id
-        WHERE u.role = 'customer'
-        GROUP BY u.id
-      ) AS customer_orders
-    `)
-  ]);
-
-  const overview = overviewResult.rows[0];
+  const customerById = new Map(erpCustomers.map(c => [c.id, c]));
+  const ordersPerCustomer = new Map();
+  for (const o of erpOrders) ordersPerCustomer.set(o.customerId, (ordersPerCustomer.get(o.customerId) || 0) + 1);
+  const stockOf = new Map(erpProducts.map(p => [p.productId, p.stock]));
+  const activeErpStock = shopProducts.filter(p => p.active && p.erp_product_id && stockOf.has(p.erp_product_id)).map(p => stockOf.get(p.erp_product_id));
 
   return {
     overview: {
-      totalOrders: Number(overview.total_orders),
-      pendingOrders: Number(overview.pending_orders),
-      shippedOrders: Number(overview.shipped_orders),
-      completedOrders: Number(overview.completed_orders),
-      cancelledOrders: Number(overview.cancelled_orders),
-      revenue: Number(overview.revenue),
-      averageOrderValue: Number(overview.average_order_value)
+      totalOrders: erpOrders.length,
+      pendingOrders: count("new") + count("picked"),
+      shippedOrders: count("shipped"),
+      completedOrders: completed.length,
+      cancelledOrders: count("canceled"),
+      revenue,
+      averageOrderValue: completed.length ? round2(revenue / completed.length) : 0
     },
-    monthly: monthlyResult.rows.map(row => ({
-      month: row.month,
-      revenue: Number(row.revenue),
-      orders: Number(row.orders)
-    })),
-    statuses: statusResult.rows.map(row => ({
-      status: row.status,
-      count: Number(row.count)
-    })),
-    categories: categoryResult.rows.map(row => ({
-      category: row.category,
-      unitsSold: Number(row.units_sold),
-      revenue: Number(row.revenue)
-    })),
-    topProducts: topProductsResult.rows.map(row => ({
-      ...row,
-      units_sold: Number(row.units_sold),
-      revenue: Number(row.revenue)
-    })),
-    recentOrders: recentOrdersResult.rows.map(row => ({
-      ...row,
-      total: Number(row.total)
-    })),
-    inventory: Object.fromEntries(
-      Object.entries(inventoryResult.rows[0]).map(([key, value]) => [
-        key,
-        Number(value)
-      ])
-    ),
-    customers: Object.fromEntries(
-      Object.entries(customerResult.rows[0]).map(([key, value]) => [
-        key,
-        Number(value)
-      ])
-    )
+    monthly,
+    statuses: [...new Set(erpOrders.map(o => o.status))].sort().map(status => ({status, count: count(status)})),
+    categories: [...categories.values()].sort((a, b) => b.revenue - a.revenue),
+    topProducts: [...sold.values()].sort((a, b) => b.revenue - a.revenue || b.units_sold - a.units_sold).slice(0, 5),
+    recentOrders: [...erpOrders].sort((a, b) => b.orderId - a.orderId).slice(0, 8).map(o => ({
+      id: o.orderId, customerName: customerById.get(o.customerId)?.name || "", createdAt: o.orderDate, status: o.status, total: o.orderAmount})),
+    inventory: {
+      active_products: shopProducts.filter(p => p.active).length,
+      inactive_products: shopProducts.filter(p => !p.active).length,
+      out_of_stock: activeErpStock.filter(stock => stock <= 0).length,
+      low_stock: activeErpStock.filter(stock => stock >= 1 && stock <= 5).length
+    },
+    customers: {
+      total_customers: shopCustomerCount,
+      repeat_customers: [...ordersPerCustomer.values()].filter(n => n > 1).length
+    }
   };
+}
+
+// The ERP being down surfaces as ErpUnavailableError, which the API answers with 503.
+export async function getAdminAnalytics() {
+  const [erpOrders, erpProducts, erpCustomers, {rows: shopProducts}, {rows: [{count}]}] = await Promise.all([
+    getErpOrders(), getErpProducts(), getErpCustomers(),
+    query("SELECT id, erp_product_id, name, category, active FROM products"),
+    query("SELECT count(*)::int AS count FROM users WHERE role = 'customer'")
+  ]);
+  return buildAnalytics({erpOrders, erpProducts, erpCustomers, shopProducts, shopCustomerCount: count});
 }
