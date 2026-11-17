@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/env.js";
-import { findUser } from "../services/authService.js";
+import { findAccount } from "../services/authService.js";
 
 export async function authRequired(req, res, next) {
   const header = req.headers.authorization || "";
@@ -13,7 +13,7 @@ export async function authRequired(req, res, next) {
     return res.status(401).json({error:"Your session has expired. Please sign in again."});
   }
   try {
-    user = await findUser(payload.id);
+    user = await findAccount(payload.id);
   } catch (error) {
     return next(error);
   }

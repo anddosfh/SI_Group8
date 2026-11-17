@@ -4,17 +4,23 @@ import { JWT_SECRET } from "../config/env.js";
 import { query } from "../database/db.js";
 import { UserError } from "../utils/errors.js";
 import { cleanText, validEmail } from "../validators/common.js";
+import { orderIdsForEmail } from "./orderService.js";
 
 // The public user shape the API returns; password hashes are only ever selected in login().
-const userColumns = `u.id, u.name, u.email, u.address, u.role,
-  ARRAY(SELECT o.id FROM orders o WHERE o.user_id = u.id ORDER BY o.id) AS "purchaseHistory"`;
+// Lab 3: purchaseHistory holds the customer's ERP order numbers (empty while the ERP is down, so login still works).
+const userColumns = "u.id, u.name, u.email, u.address, u.role";
+const withHistory = async user => user && {...user, purchaseHistory: await orderIdsForEmail(user.email)};
 
 function session(user) {
   return {token:jwt.sign({id:user.id},JWT_SECRET,{expiresIn:"7d"}),user};
 }
-export async function findUser(id) {
+// Without purchase history: used by the auth middleware on every request, so it never calls the ERP.
+export async function findAccount(id) {
   const {rows:[user]} = await query(`SELECT ${userColumns} FROM users u WHERE u.id = $1`, [id]);
   return user || null;
+}
+export async function findUser(id) {
+  return (await withHistory(await findAccount(id))) || null;
 }
 export async function register({name,email,password,address}) {
   name = cleanText(name,100); email = cleanText(email,160).toLowerCase(); address = cleanText(address,300);
@@ -32,7 +38,7 @@ export async function login({email,password}) {
   const {rows:[row]} = await query(`SELECT ${userColumns}, u.password_hash AS "passwordHash" FROM users u WHERE u.email = $1`, [normalized]);
   if (!row || !await bcrypt.compare(String(password || ""),row.passwordHash)) throw new UserError("Email or password is incorrect.");
   const {passwordHash, ...user} = row;
-  return session(user);
+  return session(await withHistory(user));
 }
 export async function updateProfile(userId, body) {
   let name = null, address = null;
