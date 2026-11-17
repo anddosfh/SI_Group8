@@ -1,10 +1,12 @@
-import { createProduct, deactivateProduct, listProducts } from "../services/productService.js";
+import { createProduct, deactivateProduct, listProducts, productStock } from "../services/productService.js";
 import { importProductFile, listImports } from "../services/productImportService.js";
 import { archiveUpload, syncFromErp, transferSettings } from "../services/erpTransferService.js";
 import { sendError } from "../utils/errors.js";
 import { cleanText } from "../validators/common.js";
 
-export async function getProducts(req,res,next){try{res.json({products:await listProducts()});}catch(e){next(e);}}
+export async function getProducts(req,res,next){try{res.json(await listProducts());}catch(e){next(e);}}
+// Lab 3: live stock of one product from the ERP (503 when the ERP is down).
+export async function getProductStock(req,res,next){try{res.json(await productStock(req.params.id));}catch(e){sendError(res,next,400,e);}}
 export async function addProduct(req,res,next){try{res.status(201).json({product:await createProduct(req.body)});}catch(e){sendError(res,next,400,e);}}
 export async function removeProduct(req,res,next){try{await deactivateProduct(req.params.id);res.json({message:"Product removed."});}catch(e){sendError(res,next,404,e);}}
 

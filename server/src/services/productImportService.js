@@ -203,34 +203,34 @@ async function applyProducts(client, products, fullSync) {
   await client.query("SELECT pg_advisory_xact_lock(4712)");
   const ids = products.map(p => p.productId);
   const {rows} = await client.query(
-    "SELECT id, erp_product_id, name, description, price, category, image, stock, active FROM products WHERE erp_product_id = ANY($1::text[]) FOR UPDATE",
+    "SELECT id, erp_product_id, name, description, price, category, image, active FROM products WHERE erp_product_id = ANY($1::text[]) FOR UPDATE",
     [ids]);
+  // Lab 3: the file's stock column is still validated, but stock is no longer stored; the shop asks the ERP live.
   const existing = new Map(rows.map(r => [r.erp_product_id, r]));
   const result = {inserted: 0, updated: 0, unchanged: 0, deactivated: 0, changes: []};
   for (const p of products) {
     const row = existing.get(p.productId);
     if (!row) {
       await client.query(
-        "INSERT INTO products (erp_product_id, name, description, price, category, image, stock) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-        [p.productId, p.name, p.description ?? "", p.price, p.category ?? DEFAULT_CATEGORY, p.image ?? placeholderImage(p.name), p.stock ?? 0]);
+        "INSERT INTO products (erp_product_id, name, description, price, category, image) VALUES ($1, $2, $3, $4, $5, $6)",
+        [p.productId, p.name, p.description ?? "", p.price, p.category ?? DEFAULT_CATEGORY, p.image ?? placeholderImage(p.name)]);
       result.inserted++;
-      result.changes.push(`${p.productId}: new product "${p.name}" (${money(p.price)}, stock ${p.stock ?? 0})`);
+      result.changes.push(`${p.productId}: new product "${p.name}" (${money(p.price)})`);
       continue;
     }
     const next = {name: p.name, description: p.description ?? row.description, price: p.price, category: p.category ?? row.category,
-      image: p.image ?? row.image, stock: p.stock ?? row.stock};
+      image: p.image ?? row.image};
     const diffs = [];
     if (row.name !== next.name) diffs.push(`name "${row.name}" → "${next.name}"`);
     if (row.description !== next.description) diffs.push("description changed");
     if (Number(row.price) !== next.price) diffs.push(`price ${money(row.price)} → ${money(next.price)}`);
     if (row.category !== next.category) diffs.push(`category ${row.category} → ${next.category}`);
     if (row.image !== next.image) diffs.push("image changed");
-    if (row.stock !== next.stock) diffs.push(`stock ${row.stock} → ${next.stock}`);
     if (!row.active) diffs.push("back in the ERP export, reactivated");
     if (!diffs.length) { result.unchanged++; continue; }
     await client.query(
-      "UPDATE products SET name = $2, description = $3, price = $4, category = $5, image = $6, stock = $7, active = TRUE WHERE id = $1",
-      [row.id, next.name, next.description, next.price, next.category, next.image, next.stock]);
+      "UPDATE products SET name = $2, description = $3, price = $4, category = $5, image = $6, active = TRUE WHERE id = $1",
+      [row.id, next.name, next.description, next.price, next.category, next.image]);
     result.updated++;
     result.changes.push(`${p.productId}: ${diffs.join(", ")}`);
   }

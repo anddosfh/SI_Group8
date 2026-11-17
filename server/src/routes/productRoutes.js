@@ -3,6 +3,7 @@ import {
   addProduct,
   getImports,
   getProducts,
+  getProductStock,
   removeProduct,
   syncErpProducts,
   uploadProductFile
@@ -12,6 +13,9 @@ import { adminRequired, authRequired } from "../middleware/auth.js";
 const router = Router();
 
 router.get("/", getProducts);
+
+// Lab 3: live stock of one product, asked by the product view
+router.get("/:id/stock", getProductStock);
 
 router.post("/", authRequired, adminRequired, addProduct);
 
