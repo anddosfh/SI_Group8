@@ -114,14 +114,14 @@ Mini-ERP ── GET /rest/api/getProducts (CSV) ──▶ server/data/erp-transf
 
 **Error handling:** a file is imported completely or not at all. Every problem is reported with its line number (missing columns, missing or invalid price/stock, unsupported currency, duplicate product IDs, empty or oversized file, unclosed quotes). The ERP's export does not quote values, so commas inside a description split it into extra columns; the importer joins them back. A complete export that would deactivate more than half of the ERP products at once is rejected as a safety stop (typically an ERP that has not loaded its data yet). If the ERP is unreachable or rejects the login, the attempt is logged and the next interval tries again. Every run is listed under **Import history** in the admin dashboard (table `product_imports`).
 
-**Consistency and limits:** products are matched only by `productID`, so importing the same file twice changes nothing. Since Lab 3 the import keeps master data (new products, names, descriptions, prices) in sync but no longer stores stock: availability is asked live from the ERP. File transfer is simple and decoupled, but the shop is only as current as the last file.
+**Consistency and limits:** products are matched only by `productID`, so importing the same file twice changes nothing. A product the admin removed in the shop stays removed even though the ERP still exports it (column `removed_by_admin`); the import only reactivates products it deactivated itself. Since Lab 3 the import keeps master data (new products, names, descriptions, prices) in sync but no longer stores stock: availability is asked live from the ERP. File transfer is simple and decoupled, but the shop is only as current as the last file.
 
 ## Lab 3 — stock and purchase orders live from the ERP (RPC)
 The Mini-ERP is the single source of truth for stock and purchase orders. The shop server calls it synchronously (`server/src/services/erpClient.js`); the browser only talks to the shop API, so the ERP credentials stay on the server.
 
 | Shop feature | ERP call |
 |---|---|
-| Catalogue, product view, checkout: live stock and price | `GET /rest/api/products` (no cache) |
+| Catalogue, product view, opening the bag, checkout: live stock and price | `GET /rest/api/products` (no cache) |
 | Find the customer for an order (by email) | `GET /rest/api/customers` |
 | Create the customer / update the address | OData `POST`/`PATCH /odata/v4/simple-erp/Customers` (the REST API has no call for it) |
 | Place the order | `POST /rest/api/createOrder`, then `GET /rest/api/orders` for the order number (createOrder answers 204 without one) |

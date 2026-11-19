@@ -45,7 +45,7 @@ export async function createProduct(body) {
   return {...product,stock:initialStock,availability:availabilityOf(initialStock,true)};
 }
 export async function deactivateProduct(id) {
-  const {rows:[product]}=await query(`UPDATE products SET active = FALSE WHERE id = $1 AND active RETURNING ${productColumns}`,[positiveId(id)]);
+  const {rows:[product]}=await query(`UPDATE products SET active = FALSE, removed_by_admin = TRUE WHERE id = $1 AND active RETURNING ${productColumns}`,[positiveId(id)]);
   if(!product)throw new UserError("Product not found.");
   return product;
 }

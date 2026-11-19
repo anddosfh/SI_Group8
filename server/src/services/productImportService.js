@@ -203,7 +203,7 @@ async function applyProducts(client, products, fullSync) {
   await client.query("SELECT pg_advisory_xact_lock(4712)");
   const ids = products.map(p => p.productId);
   const {rows} = await client.query(
-    "SELECT id, erp_product_id, name, description, price, category, image, active FROM products WHERE erp_product_id = ANY($1::text[]) FOR UPDATE",
+    "SELECT id, erp_product_id, name, description, price, category, image, active, removed_by_admin FROM products WHERE erp_product_id = ANY($1::text[]) FOR UPDATE",
     [ids]);
   // Lab 3: the file's stock column is still validated, but stock is no longer stored; the shop asks the ERP live.
   const existing = new Map(rows.map(r => [r.erp_product_id, r]));
@@ -226,10 +226,11 @@ async function applyProducts(client, products, fullSync) {
     if (Number(row.price) !== next.price) diffs.push(`price ${money(row.price)} → ${money(next.price)}`);
     if (row.category !== next.category) diffs.push(`category ${row.category} → ${next.category}`);
     if (row.image !== next.image) diffs.push("image changed");
-    if (!row.active) diffs.push("back in the ERP export, reactivated");
+    // A product the admin removed in the shop keeps its data in sync but is not shown again.
+    if (!row.active && !row.removed_by_admin) diffs.push("back in the ERP export, reactivated");
     if (!diffs.length) { result.unchanged++; continue; }
     await client.query(
-      "UPDATE products SET name = $2, description = $3, price = $4, category = $5, image = $6, active = TRUE WHERE id = $1",
+      "UPDATE products SET name = $2, description = $3, price = $4, category = $5, image = $6, active = NOT removed_by_admin WHERE id = $1",
       [row.id, next.name, next.description, next.price, next.category, next.image]);
     result.updated++;
     result.changes.push(`${p.productId}: ${diffs.join(", ")}`);

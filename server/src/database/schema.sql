@@ -34,6 +34,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS products_erp_product_id_unique
   ON products (erp_product_id)
   WHERE erp_product_id IS NOT NULL;
 
+-- Lab 1 "remove products" with Lab 2's import: a product the admin removed stays removed, even if the ERP
+-- still exports it (the import only reactivates products it deactivated itself).
+ALTER TABLE products
+  ADD COLUMN IF NOT EXISTS removed_by_admin BOOLEAN NOT NULL DEFAULT FALSE;
+
 -- Lab 2: one row per processed ERP product file (or failed ERP export), shown in the admin dashboard.
 CREATE TABLE IF NOT EXISTS product_imports (
   id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

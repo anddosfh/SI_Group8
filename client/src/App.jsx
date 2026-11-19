@@ -25,6 +25,7 @@ function StoreApp() {
   // Lab 3: false when the shop could not reach the ERP for live stock; null until the first load.
   const [erpAvailable,setErpAvailable] = useState(null);
   const [detailStock,setDetailStock] = useState(null);
+  // Lab 3: also called when the bag opens, so its stock limits come fresh from the ERP.
   async function loadProducts(){try{const r=await api("/products");setProducts(r.products||[]);setErpAvailable(r.erpAvailable!==false);setLoadError("");store.syncCart(r.products||[]);}catch(e){setLoadError(e.message);}}
   // Lab 3: opening a product asks the ERP for its current stock.
   useEffect(()=>{if(!selected)return;let current=true;setDetailStock({loading:true});api(`/products/${selected.id}/stock`).then(r=>{if(current)setDetailStock(r);}).catch(e=>{if(current)setDetailStock({availability:"unknown",error:e.message});});return()=>{current=false;};},[selected]);
@@ -48,7 +49,7 @@ function StoreApp() {
     try{const me=await api("/auth/me");setSession(getToken(),me.user);setUser(me.user);}catch{}
   }
   return <div className="app-shell">
-    <Header categories={categories} category={category} setCategory={setCategory} query={query} setQuery={setQuery} cartCount={store.cart.reduce((n,i)=>n+i.quantity,0)} onCart={()=>setModal("cart")} onAccount={()=>setModal("account")} user={user} onLogout={logout}/>
+    <Header categories={categories} category={category} setCategory={setCategory} query={query} setQuery={setQuery} cartCount={store.cart.reduce((n,i)=>n+i.quantity,0)} onCart={()=>{setModal("cart");loadProducts();}} onAccount={()=>setModal("account")} user={user} onLogout={logout}/>
     <main>
       <section className="hero">
         <div className="hero-copy"><p className="eyebrow"><span className="eyebrow-dot"/> THE NOVA COLLECTION · 2026</p><h1>Better tech.<br/><span>Less noise.</span></h1><p className="hero-description">Thoughtful technology for the way you live, work and move. Nothing unnecessary. Just the essentials, reimagined.</p><div className="hero-actions"><button className="button button-dark" onClick={()=>document.getElementById("catalogue").scrollIntoView({behavior:"smooth"})}>Explore the collection <ArrowRight size={17}/></button><span className="hero-count">01 — {products.length} PRODUCTS</span></div><div className="hero-footnote"><span>DESIGNED WITH INTENTION</span><span>BUILT FOR EVERY DAY</span></div></div>
